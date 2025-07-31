@@ -5,6 +5,7 @@ import HTMLFlipBook from 'react-pageflip';
 import type { ComponentProps } from 'react';
 import styles from './BookFlip.module.scss';
 import ArticleLightbox from '../article/ArticleLightbox';
+import Image from 'next/image';
 
 export interface BookFlipHandle {
   flipToPage: (index: number) => void;
@@ -26,7 +27,7 @@ interface BookFlipProps {
 
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages, stopAutoflip, onReadMore }, ref) => {
-    const flipRef = useRef<any>(null);
+    const flipRef = useRef<any>(null); // `any` used here for third-party ref compatibility
     const [isHovered, setIsHovered] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
@@ -52,8 +53,11 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     }, [isHovered, stopAutoflip]);
 
     const handleReadMore = (article: Article) => {
-      if (onReadMore) onReadMore(article);
-      else setSelectedArticle(article);
+      if (onReadMore) {
+        onReadMore(article);
+      } else {
+        setSelectedArticle(article);
+      }
     };
 
     const flipProps: ComponentProps<typeof HTMLFlipBook> = {
@@ -93,15 +97,16 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
           <HTMLFlipBook {...flipProps} ref={flipRef}>
             {pages.map((page, index) => (
               <div key={index} className={styles.page}>
-                <img
-                  src={page.image || '/assets/fallback-blog.jpeg'}
-                  alt={page.title}
-                  className={styles.image}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assets/fallback-blog.jpeg';
-                  }}
-                />
+                <div className={styles.imageWrapper}>
+                  <Image
+                    src={page.image || '/assets/fallback-blog.jpeg'}
+                    alt={page.title}
+                    width={400}
+                    height={250}
+                    className={styles.image}
+                    onError={(e) => console.warn('Image failed to load', e)}
+                  />
+                </div>
                 <h2 className={styles.title}>{page.title}</h2>
                 <hr className={styles.divider} />
                 <p className={styles.author}>By {page.author}</p>

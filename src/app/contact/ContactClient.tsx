@@ -9,7 +9,7 @@ export default function ContactClient() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.left}>
-        <h1>Let's Talk</h1>
+        <h1>Let&apos;s Talk</h1>
         <p>Drop us a message and we’ll get back to you fast 🚀</p>
         <form>
           <input type="text" placeholder="Your Name" required />
