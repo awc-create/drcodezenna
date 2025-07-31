@@ -3,7 +3,7 @@ name: Trigger CI/CD Deployment
 on:
   push:
     branches:
-      - main
+      - main-hetz
       - dev
       - 'feat/**'
       - 'fix/**'
