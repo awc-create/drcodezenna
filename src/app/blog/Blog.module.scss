@@ -1,0 +1,136 @@
+@font-face {
+  font-family: 'DrCodesTimes';
+  src: url('/fonts/DrCodesTimes.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.blog {
+  padding: 2rem;
+  margin-top: -3.4rem;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 960px;
+}
+
+.bookSpread {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  padding: 2rem 1rem;
+}
+
+.page {
+  flex: 0 1 45%;
+  max-width: 450px;
+  background: white;
+  padding: 1.5rem;
+  border: 1px solid #ccc;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  min-height: 500px;
+
+  img,
+  .image {
+    height: 140px;
+    width: 100%;
+    object-fit: cover;
+    background: #dcdcdc;
+    margin-bottom: 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .author {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #444;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .summary {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+  }
+
+  .readMore {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: black;
+    margin-top: auto;
+
+    span {
+      font-size: 1.2rem;
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Responsive Row for Logo + Dropdown */
+.blogHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.blogLogo {
+  font-family: 'DrCodesTimes', serif;
+  font-size: 2.75rem;
+  font-weight: normal;
+  color: #000;
+  white-space: nowrap;
+  line-height: 1;
+
+  @media (max-width: 600px) {
+    font-size: 2rem;
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
+.postSelector {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 2px;
+  min-width: 220px;
+
+  @media (max-width: 600px) {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    margin: 0 auto;
+  }
+}

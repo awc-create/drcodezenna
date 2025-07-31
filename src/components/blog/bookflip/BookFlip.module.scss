@@ -1,0 +1,74 @@
+.bookContainer {
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.book {
+  box-shadow: none;
+}
+
+.page {
+  background: white;
+  padding: 2rem;
+  border: 1px solid #ccc;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+
+  .image {
+    height: 200px;
+    width: 100%;
+    object-fit: cover;
+    background: #dcdcdc;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+  }
+
+  .title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .author {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .summary {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+    flex-grow: 1;
+  }
+
+  .readMore {
+    font-weight: 600;
+    font-size: 1rem;
+    display: inline-block;
+    color: #003087;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      color: #000;
+
+      .arrow {
+        transform: translateX(5px);
+      }
+    }
+  }
+}

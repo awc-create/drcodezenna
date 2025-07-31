@@ -1,0 +1,108 @@
+.home {
+  background: white;
+  font-family: 'Playfair Display', serif;
+  margin-top: -1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.cardSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2rem var(--gutter);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    gap: 0.5rem;
+  }
+
+  .tag {
+    background: #e1e1e1;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+  }
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 960px;
+}
+
+
+.lightboxContent {
+  background: white;
+  padding: 2rem 2.5rem;
+  max-width: 700px;
+  width: 100%;
+  margin: 2rem auto;
+  border-radius: 12px;
+  font-family: 'Playfair Display', serif;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+    color: #222;
+  }
+
+  p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #333;
+    margin-bottom: 1.25rem;
+    text-align: justify;
+  }
+}
+
+.meta {
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+

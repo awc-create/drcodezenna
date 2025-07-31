@@ -1,0 +1,131 @@
+.home {
+  background: white;
+  color: black;
+  font-family: 'Playfair Display', serif;
+  margin-top: -1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* 🔥 HERO SECTION */
+.hero {
+  display: grid;
+  grid-template-columns: auto 180px;
+  align-items: center;
+  gap: 2rem;
+
+  width: 100%;
+  max-width: 960px;
+  width: 100%;
+  max-width: 960px;
+  position: relative;
+
+  .left {
+    position: relative;
+    padding-left: 1rem;
+
+    h2 {
+      font-size: 4rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .subtext {
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .avatar {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid black;
+      background: #f9f9f9;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    text-align: center;
+
+    .left {
+      padding-left: 0;
+
+      h2 {
+        font-size: 2.5rem;
+      }
+
+      .subtext {
+        font-size: 1.1rem;
+      }
+
+      &::before {
+        display: none;
+      }
+    }
+
+    .right .avatar {
+      margin-top: 1rem;
+      width: 150px;
+      height: 150px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .left h2 {
+      font-size: 2rem;
+    }
+
+    .left .subtext {
+      font-size: 1rem;
+    }
+
+    .right .avatar {
+      width: 130px;
+      height: 130px;
+    }
+  }
+}
+
+/* 🧭 DIVIDER LINE */
+.divider {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 960px;
+}
+
+/* 📝 BIO SECTION */
+.bioSection {
+  max-width: 960px;
+  margin: 0 auto;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 2rem;
+  padding-inline: 1rem;
+
+  .bio {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    text-align: left;
+  }
+
+  @media (max-width: 640px) {
+    .bio {
+      font-size: 1rem;
+    }
+  }
+}
