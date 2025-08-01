@@ -12,7 +12,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <Navbar isEcommerce={isEcommerce} />
+      <Navbar/>
       <main style={{ paddingTop: isHome ? 0 : "var(--navbar-height)" }}>
         {children}
       </main>
