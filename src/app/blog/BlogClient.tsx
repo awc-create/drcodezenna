@@ -6,6 +6,8 @@ import BookFlip, { BookFlipHandle } from '@/components/blog/bookflip/BookFlip';
 import PostListSelector from '@/components/blog/postlist/PostListSelector';
 import LightboxArticle from '@/components/blog/article/ArticleLightbox';
 import styles from './Blog.module.scss';
+import NewspaperScroll from '@/components/blog/mobile/NewspaperScroll';
+import { useEffect } from 'react';
 
 const allPosts = [
   {
@@ -100,6 +102,15 @@ export default function BlogClient() {
     setSelectedArticle(null);
   };
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <main className={styles.blog}>
       <HeroHeader title="BLOG" subtitle="Writing that turns the page" />
@@ -116,12 +127,16 @@ export default function BlogClient() {
 
       <hr className={styles.divider} />
 
+        {isMobile ? (
+      <NewspaperScroll posts={allPosts} onReadMore={handleReadMore} />
+    ) : (
       <BookFlip
         ref={flipRef}
         pages={allPosts}
         stopAutoflip={stopAutoflip}
         onReadMore={handleReadMore}
       />
+    )}
 
       {selectedArticle && (
         <LightboxArticle

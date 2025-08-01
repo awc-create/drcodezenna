@@ -52,7 +52,7 @@ export default function LightboxArticle({
         </div>
 
         <button className={styles.close} onClick={onClose}>
-          ✕ Close
+          ✕
         </button>
       </div>
     </div>

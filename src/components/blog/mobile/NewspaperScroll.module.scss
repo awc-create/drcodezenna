@@ -1,0 +1,58 @@
+.mobileNewspaper {
+  background: #fefefe;
+  padding: 2rem 1rem;
+  font-family: 'Playfair Display', serif;
+  line-height: 1.6;
+  color: #111;
+  background-image: url('/assets/paper-texture.jpg'); // optional texture
+  background-size: cover;
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  background: #fefefe;
+  padding: 1rem 0;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  z-index: 10;
+  text-align: center;
+}
+
+.articlePreview {
+  margin-bottom: 3rem;
+  border-bottom: 1px dotted #999;
+  padding-bottom: 2rem;
+}
+
+.articlePreview h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.articleMeta {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.dropCap::first-letter {
+  float: left;
+  font-size: 3rem;
+  line-height: 1;
+  padding-right: 0.25rem;
+  color: #555;
+  font-weight: bold;
+}
+
+.articlePreview button {
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: #005;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
