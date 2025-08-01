@@ -15,7 +15,7 @@ export interface Article {
   title: string;
   author: string;
   summary: string;
-  image?: string;
+  image: string;
   content: string;
 }
 
@@ -25,9 +25,19 @@ interface BookFlipProps {
   onReadMore?: (article: Article) => void;
 }
 
+// ✅ Manual typing for the flipRef
+interface FlipBookRef {
+  pageFlip: () => {
+    flip: (pageIndex: number) => void;
+    flipNext: () => void;
+    getCurrentPageIndex: () => number;
+    getPageCount: () => number;
+  };
+}
+
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages, stopAutoflip, onReadMore }, ref) => {
-    const flipRef = useRef<any>(null); // `any` used here for third-party ref compatibility
+    const flipRef = useRef<FlipBookRef | null>(null);
     const [isHovered, setIsHovered] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
@@ -60,7 +70,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       }
     };
 
-    const flipProps: ComponentProps<typeof HTMLFlipBook> = {
+    const flipProps = {
       width: 500,
       height: 500,
       minWidth: 315,
@@ -85,7 +95,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       renderOnlyPageLengthChange: false,
       className: styles.book,
       style: { margin: '0 auto' },
-    };
+    } as ComponentProps<typeof HTMLFlipBook>; // ✅ cast to satisfy TS
 
     return (
       <>
@@ -126,7 +136,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
           <ArticleLightbox
             title={selectedArticle.title}
             author={selectedArticle.author}
-            image={selectedArticle.image || '/assets/fallback-blog.jpeg'}
+            image={selectedArticle.image}
             content={selectedArticle.content}
             onClose={() => setSelectedArticle(null)}
           />

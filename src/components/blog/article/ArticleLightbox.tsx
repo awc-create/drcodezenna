@@ -1,6 +1,7 @@
 'use client';
 
 import styles from './ArticleLightbox.module.scss';
+import Image from 'next/image';
 
 interface LightboxArticleProps {
   title: string;
@@ -17,7 +18,10 @@ export default function LightboxArticle({
   content,
   onClose,
 }: LightboxArticleProps) {
-  const paragraphs = typeof content === 'string' && content.trim().length > 0 ? content.split('\n\n') : [];
+  const paragraphs =
+    typeof content === 'string' && content.trim().length > 0
+      ? content.split('\n\n')
+      : [];
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -28,7 +32,16 @@ export default function LightboxArticle({
         <p className={styles.byline}>Written by {author}</p>
 
         <div className={styles.contentArea}>
-          <img src={image} alt={title} className={styles.image} />
+          <div className={styles.imageWrapper}>
+            <Image
+              src={image || '/assets/fallback-blog.jpeg'}
+              alt={title}
+              width={400}
+              height={250}
+              className={styles.image}
+              onError={(e) => console.warn('Image failed to load', e)}
+            />
+          </div>
           <div className={styles.text}>
             {paragraphs.length === 0 ? (
               <p>No content available.</p>

@@ -13,7 +13,7 @@ const allPosts = [
     author: 'Dr Odera Ezenna',
     summary:
       "This childhood treat has stormed New York restaurant menus. Our critic isn’t having it.",
-    image: '/assets/sundae.png',
+    image: '/assets/fallback-blog.jpeg',
     content: `
 Once a nostalgic dessert reserved for children’s birthdays and retro diners, the ice cream sundae has now taken over New York’s upscale menus. At establishments like SweetForge and Brasserie Belle, you'll find sundaes dripping with saffron cream, edible gold, and 10-scoop towers designed more for Instagram than indulgence.
 
@@ -31,7 +31,7 @@ As food trends move faster than ever, maybe the best thing we can do is... stop 
     author: 'Dr Odera Ezenna',
     summary:
       'Mac and cheese is like a hug in a warm sweater. A homemade version is worth the effort.',
-    image: '/assets/mac.png',
+    image: '/assets/fallback-blog.jpeg',
     content: `
 There's nothing quite like mac and cheese. Whether served as a main or a side, it's warm, rich, and endlessly comforting.
 
@@ -49,7 +49,7 @@ Mac and cheese doesn’t need reinvention — just care. And when you make it fr
     author: 'Dr Odera Ezenna',
     summary:
       'In 1904, Bayard Wootten, a divorced single mother in North Carolina, borrowed a camera...',
-    image: '/assets/bayard.png',
+    image: '/assets/fallback-blog.jpeg',
     content: `
 Bayard Wootten wasn’t meant to be a photographer. Born in 1875 and divorced by 1904, she was raising two children alone in North Carolina. But a borrowed camera changed everything.
 
@@ -65,7 +65,7 @@ Today, her legacy is a quiet reminder: creativity doesn’t wait for permission.
     author: 'Dr Odera Ezenna',
     summary:
       'Roy Baizan chronicles the punk and hip-hop scene in the Bronx, including Hydro Punk.',
-    image: '/assets/punk.png',
+    image: '/assets/fallback-blog.jpeg',
     content: `
 In the heart of the Bronx, a new movement is reshaping punk.
 

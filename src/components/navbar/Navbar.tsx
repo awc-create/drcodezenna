@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import styles from "./Navbar.module.scss";
 import { NAV_LINKS } from "@/config/menu.config";
 
-export default function Navbar({ isEcommerce = false }: { isEcommerce?: boolean }) {
+export default function Navbar() {
   const pathname = usePathname();
 
   const isLinkActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
