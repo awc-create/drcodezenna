@@ -98,6 +98,14 @@ main {
   z-index: -1;
 }
 
+.newspaper-divider {
+  border: none;
+  border-top: 2px dotted #999;
+  margin: 2rem auto 0 auto;
+  width: 90%;
+  max-width: 800px;
+}
+
 /* ======================= */
 /* 📦 CONTAINER            */
 /* ======================= */
