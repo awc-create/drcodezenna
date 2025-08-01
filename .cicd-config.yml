@@ -1,5 +1,4 @@
 project_type: static
 deploy_targets:
   main-hetz: hetzner
-  feat/: vercel
-  fix/: vercel
+  deploy_to: vercel
