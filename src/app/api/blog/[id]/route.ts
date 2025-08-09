@@ -1,11 +1,7 @@
-// src/app/api/blog/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { blogSchema } from '@/schemas/blog';
-
-// Type for params in this dynamic route
-type BlogRouteParams = { params: { id: string | string[] } };
 
 const getId = (rawId: string | string[]): string =>
   Array.isArray(rawId) ? rawId[0] : rawId;
@@ -15,7 +11,7 @@ const json = (data: unknown, status = 200) =>
 
 export async function GET(
   _req: NextRequest,
-  { params }: BlogRouteParams
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
     const id = getId(params.id);
@@ -30,13 +26,12 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: BlogRouteParams
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
     const id = getId(params.id);
     const body = await req.json();
 
-    // Validate with partial schema for updates
     const parsed = blogSchema.partial().safeParse(body);
     if (!parsed.success) {
       return json(
@@ -50,6 +45,7 @@ export async function PUT(
         400
       );
     }
+
     if (Object.keys(parsed.data).length === 0) {
       return json({ error: 'No valid fields to update' }, 400);
     }
@@ -71,7 +67,7 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: BlogRouteParams
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
     const id = getId(params.id);
