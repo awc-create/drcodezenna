@@ -1,18 +1,22 @@
+// src/app/api/blog/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
-import { blogSchema } from '@/schemas/blog'; // assumes you already have this
+import { blogSchema } from '@/schemas/blog';
 
-// Helper: consistent JSON response
+// Small helper so we can avoid annotating the context and still be safe
+const getId = (ctx: any): string => {
+  const raw = ctx?.params?.id;
+  return Array.isArray(raw) ? raw[0] : String(raw);
+};
+
 const json = (data: unknown, status = 200) =>
   NextResponse.json(data, { status });
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, ctx: any) {
   try {
-    const post = await prisma.blogPost.findUnique({ where: { id: params.id } });
+    const id = getId(ctx);
+    const post = await prisma.blogPost.findUnique({ where: { id } });
     if (!post) return json({ error: 'Not found' }, 404);
     return json(post);
   } catch (err) {
@@ -21,14 +25,12 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, ctx: any) {
   try {
+    const id = getId(ctx);
     const body = await req.json();
 
-    // Validate against your schema, but allow partial updates
+    // Allow partial updates, validate fields
     const parsed = blogSchema.partial().safeParse(body);
     if (!parsed.success) {
       return json(
@@ -42,46 +44,34 @@ export async function PUT(
         400
       );
     }
-
-    // Ensure we don't accidentally write an empty object
     if (Object.keys(parsed.data).length === 0) {
       return json({ error: 'No valid fields to update' }, 400);
     }
 
     const updated = await prisma.blogPost.update({
-      where: { id: params.id },
+      where: { id },
       data: parsed.data,
     });
 
     return json(updated);
   } catch (err) {
     console.error('PUT /api/blog/[id] error:', err);
-
-    // Handle Prisma known errors (like record not found)
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
-      if (err.code === 'P2025') {
-        // An operation failed because it depends on one or more records that were required but not found
-        return json({ error: 'Not found' }, 404);
-      }
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return json({ error: 'Not found' }, 404);
     }
     return json({ error: 'Server error' }, 500);
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, ctx: any) {
   try {
-    await prisma.blogPost.delete({ where: { id: params.id } });
+    const id = getId(ctx);
+    await prisma.blogPost.delete({ where: { id } });
     return json({ success: true });
   } catch (err) {
     console.error('DELETE /api/blog/[id] error:', err);
-
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
-      if (err.code === 'P2025') {
-        return json({ error: 'Not found' }, 404);
-      }
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return json({ error: 'Not found' }, 404);
     }
     return json({ error: 'Server error' }, 500);
   }
