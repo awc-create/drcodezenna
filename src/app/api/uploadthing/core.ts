@@ -27,7 +27,7 @@ export const ourFileRouter = {
         where: { name: file.name ?? 'untitled', NOT: { id: newEntry.id } },
       });
 
-      console.log(`✅ Uploaded and cleaned duplicates for: ${file.name}`);
+      console.info(`✅ Uploaded and cleaned duplicates for: ${file.name}`); // ✅ lint-safe
       return { success: true as const, skipped: false as const };
     } catch (err: unknown) {
       console.error('❌ UploadThing DB error:', err);
