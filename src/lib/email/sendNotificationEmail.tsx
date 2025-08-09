@@ -12,14 +12,24 @@ type Params = {
   postUrl: string;
 };
 
+type SendResult =
+  | { skipped: true }
+  | { data: unknown }
+  | { error: string };
+
 export async function sendNotificationEmail({
   to,
   subject,
   postTitle,
   postType,
   postUrl,
-}: Params) {
+}: Params): Promise<SendResult> {
   try {
+    if (!resend) {
+      console.warn('Email skipped: RESEND not configured.');
+      return { skipped: true };
+    }
+
     const response = await resend.emails.send({
       from: 'Dr Odera <updates@dr-oderacode.com>',
       to,
@@ -35,10 +45,12 @@ export async function sendNotificationEmail({
 
     if (response.error) {
       console.error('Resend error:', response.error);
+      return { error: typeof response.error === 'string' ? response.error : 'Resend send error' };
     }
 
-    return response.data;
+    return { data: response.data };
   } catch (err) {
     console.error('Email failed:', err);
+    return { error: 'Send failed' };
   }
 }
