@@ -76,7 +76,18 @@ export default function SubscriberList({ onEdit, onUpdateCount }: Props) {
       <div className={styles.toolbar}>
         <button
           className={styles.exportButton}
-          onClick={() => exportToCSV(subscribers, 'subscribers.csv')}
+          onClick={() =>
+            exportToCSV(subscribers, 'subscribers.csv', {
+              columns: [
+                { key: 'email', header: 'Email' },
+                { key: 'name', header: 'Name', format: v => (typeof v === 'string' ? v : '') },
+                { key: 'location', header: 'Location', format: v => (typeof v === 'string' ? v : '') },
+                { key: 'interests', header: 'Interests', format: v => (Array.isArray(v) ? v.join(' | ') : '') },
+                { key: 'subscribedAt', header: 'Subscribed', format: v => (v ? new Date(String(v)).toISOString() : '') },
+              ],
+              includeBOM: true,
+            })
+          }
           disabled={subscribers.length === 0}
           title={subscribers.length === 0 ? 'No subscribers to export' : 'Export CSV'}
         >
