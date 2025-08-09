@@ -17,6 +17,9 @@ type SendResult =
   | { data: unknown }
   | { error: string };
 
+// Minimal shape compatible with different Resend SDK versions
+type ResendSendResponse = { data?: unknown; error?: unknown };
+
 export async function sendNotificationEmail({
   to,
   subject,
@@ -25,12 +28,14 @@ export async function sendNotificationEmail({
   postUrl,
 }: Params): Promise<SendResult> {
   try {
-    if (!resend) {
+    // Narrow the nullable client into a local non-null var
+    const client = resend;
+    if (!client) {
       console.warn('Email skipped: RESEND not configured.');
       return { skipped: true };
     }
 
-    const response = await resend.emails.send({
+    const raw = await client.emails.send({
       from: 'Dr Odera <updates@dr-oderacode.com>',
       to,
       subject,
@@ -43,9 +48,16 @@ export async function sendNotificationEmail({
       ),
     });
 
+    const response = raw as unknown as ResendSendResponse;
+
     if (response.error) {
       console.error('Resend error:', response.error);
-      return { error: typeof response.error === 'string' ? response.error : 'Resend send error' };
+      return {
+        error:
+          typeof response.error === 'string'
+            ? response.error
+            : 'Resend send error',
+      };
     }
 
     return { data: response.data };
