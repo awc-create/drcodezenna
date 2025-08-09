@@ -6,9 +6,9 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  type ComponentProps,
 } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import type { ComponentProps } from 'react';
 import styles from './BookFlip.module.scss';
 import ArticleLightbox from '@/components/blog/article/ArticleLightbox';
 import Image from 'next/image';
@@ -53,24 +53,13 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       if (stopAutoflip || pages.length === 0) return;
 
       const interval = setInterval(() => {
-        if (!isHovered && flipRef.current?.pageFlip) {
-          const flipInstance = flipRef.current.pageFlip();
-          if (
-            flipInstance &&
-            typeof flipInstance.getCurrentPageIndex === 'function' &&
-            typeof flipInstance.getPageCount === 'function' &&
-            typeof flipInstance.flipNext === 'function' &&
-            typeof flipInstance.flip === 'function'
-          ) {
-            const current = flipInstance.getCurrentPageIndex();
-            const total = flipInstance.getPageCount();
-
-            // ✅ ESLint-safe if/else
-            if (current >= total - 1) {
-              flipInstance.flip(0);
-            } else {
-              flipInstance.flipNext();
-            }
+        const api = flipRef.current?.pageFlip?.();
+        if (!isHovered && api) {
+          const current = api.getCurrentPageIndex?.();
+          const total = api.getPageCount?.();
+          if (typeof current === 'number' && typeof total === 'number') {
+            if (current >= total - 1) api.flip?.(0);
+            else api.flipNext?.();
           }
         }
       }, 6000);
@@ -78,17 +67,13 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       return () => clearInterval(interval);
     }, [isHovered, stopAutoflip, pages]);
 
-    // Local read more handler
     const handleReadMore = (article: BlogPost) => {
-      if (onReadMore) {
-        onReadMore(article);
-      } else {
-        setSelectedArticle(article);
-      }
+      if (onReadMore) onReadMore(article);
+      else setSelectedArticle(article);
     };
 
-    // Flipbook props
-    const flipProps: ComponentProps<typeof HTMLFlipBook> = {
+    // Only specify the subset we care about, but keep type-safety
+    const flipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
       minWidth: 320,
@@ -97,17 +82,21 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       maxHeight: 1536,
       usePortrait: isMobile,
       showCover: false,
-      size: 'fixed',
+      size: 'fixed' as const,
       drawShadow: false,
       flippingTime: 1000,
       showPageCorners: false,
-      disableFlipByClick: isMobile,   // ✅ prevent accidental flips on mobile
-      clickEventForward: !isMobile,   // ✅ don’t forward taps on mobile
+      disableFlipByClick: isMobile, // prevent accidental flips on mobile
+      clickEventForward: !isMobile, // don’t forward taps on mobile
       useMouseEvents: true,
       mobileScrollSupport: true,
       className: styles.book,
       style: { margin: '0 auto' },
-    };
+      // If your installed typings mark these as required, uncomment:
+      // startPage: 0,
+      // startZIndex: 0,
+      // autoSize: true,
+    } satisfies Partial<ComponentProps<typeof HTMLFlipBook>>;
 
     const shouldShowLightbox = Boolean(selectedArticle) && !onReadMore;
 
@@ -135,7 +124,6 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                 <p className={styles.author}>By {page.author}</p>
                 <p className={styles.summary}>{page.summary}</p>
 
-                {/* ✅ Mobile tap-safe button */}
                 <button
                   type="button"
                   className={styles.readMore}
@@ -153,12 +141,12 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
           </HTMLFlipBook>
         </div>
 
-        {shouldShowLightbox && (
+        {shouldShowLightbox && selectedArticle && (
           <ArticleLightbox
-            title={selectedArticle!.title}
-            author={selectedArticle!.author}
-            image={selectedArticle!.image}
-            content={selectedArticle!.content}
+            title={selectedArticle.title}
+            author={selectedArticle.author}
+            image={selectedArticle.image}
+            content={selectedArticle.content}
             onClose={() => setSelectedArticle(null)}
           />
         )}
