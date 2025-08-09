@@ -43,7 +43,6 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     const [isHovered, setIsHovered] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<BlogPost | null>(null);
 
-    // Public API for parent
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
         const api = flipRef.current?.pageFlip?.();
@@ -82,7 +81,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       }
     };
 
-    // Enable corner drag & side-tap flipping
+    // Corner drag + corner tap, without page jank
     const flipProps: FlipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
@@ -90,17 +89,19 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       maxWidth: 1000,
       minHeight: 400,
       maxHeight: 1536,
-      usePortrait: isMobile,      // single page on phones
+      usePortrait: isMobile,
       showCover: false,
       size: 'fixed',
       drawShadow: false,
       flippingTime: 900,
-      showPageCorners: true,      // ✅ draggable corners
-      disableFlipByClick: false,  // ✅ taps on left/right flip back/forward
-      clickEventForward: false,   // let flipbook handle taps
+      showPageCorners: true,      // draggable corners
+      disableFlipByClick: false,  // taps on halves flip
+      clickEventForward: false,   // let the book handle taps
       useMouseEvents: true,
-      mobileScrollSupport: true,
-      swipeDistance: 12,          // easier to start drag on mobile
+
+      // KEY CHANGE: let the flipbook own touch gestures (prevents page “shake”)
+      mobileScrollSupport: false, // 👈 stops the page from trying to scroll while dragging
+      swipeDistance: 12,
 
       className: styles.book,
       style: { margin: '0 auto' },
