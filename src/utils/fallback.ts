@@ -3,7 +3,7 @@ import type { BlogPost, TeachingPost } from '@/types';
 
 const FALLBACK_IMG = '/assets/fallback-blog.jpeg';
 
-// 4 fallback blogs
+// ---- BLOG FALLBACKS (no `updatedAt` on BlogPost) ----
 export const FALLBACK_BLOGS: BlogPost[] = [
   {
     id: 'fb-1',
@@ -13,7 +13,7 @@ export const FALLBACK_BLOGS: BlogPost[] = [
     image: FALLBACK_IMG,
     content: 'In a world of infinite feeds, literacy means interrogating sources…',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    // notified is optional in your UI types; omit unless required
   },
   {
     id: 'fb-2',
@@ -23,7 +23,6 @@ export const FALLBACK_BLOGS: BlogPost[] = [
     image: FALLBACK_IMG,
     content: 'Stories give learners an anchor. Start with lived examples…',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   },
   {
     id: 'fb-3',
@@ -33,7 +32,6 @@ export const FALLBACK_BLOGS: BlogPost[] = [
     image: FALLBACK_IMG,
     content: 'Design guides attention. Headlines set hierarchy; whitespace breathes…',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   },
   {
     id: 'fb-4',
@@ -43,11 +41,10 @@ export const FALLBACK_BLOGS: BlogPost[] = [
     image: FALLBACK_IMG,
     content: 'Block time: skim → deep read → synthesize. Habits win…',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   },
 ];
 
-// 4 fallback teaching posts
+// ---- TEACHING FALLBACKS (TeachingPost DOES have `updatedAt`) ----
 export const FALLBACK_TEACHING: TeachingPost[] = [
   {
     id: 'ft-1',
@@ -56,9 +53,14 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     year: '2024',
     type: 'Lecture',
     isCurrent: false,
+    tags: ['media', 'society', 'theory'],
     description: 'Foundations of media theory, bias, and representation.',
+    fullText: 'Syllabus overview, weekly topics, assessment structure…',
+    startDate: undefined,
+    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    notified: false,
   },
   {
     id: 'ft-2',
@@ -67,9 +69,14 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     year: '2023',
     type: 'Seminar',
     isCurrent: false,
+    tags: ['methods', 'qualitative'],
     description: 'Interviews, coding transcripts, thematic maps.',
+    fullText: 'Practice sessions, coding frameworks, sample assignments…',
+    startDate: undefined,
+    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    notified: false,
   },
   {
     id: 'ft-3',
@@ -78,9 +85,14 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     year: '2022',
     type: 'Workshop',
     isCurrent: false,
+    tags: ['writing', 'public'],
     description: 'Turn research into op-eds and accessible essays.',
+    fullText: 'Pitching, structure, voice, and editorial feedback…',
+    startDate: undefined,
+    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    notified: false,
   },
   {
     id: 'ft-4',
@@ -89,8 +101,13 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     year: '2021',
     type: 'Lecture',
     isCurrent: false,
+    tags: ['history', 'technology'],
     description: 'From print to platform: tech that reshaped discourse.',
+    fullText: 'Timelines, key movements, and primary sources…',
+    startDate: undefined,
+    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    notified: false,
   },
 ];
