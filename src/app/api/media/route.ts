@@ -4,8 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const media = await prisma.media.findMany({
-      // change "uploadedAt" to your actual timestamp column
-      orderBy: { uploadedAt: 'desc' },
+      orderBy: { uploaded: 'desc' },
     });
     return NextResponse.json(media);
   } catch (error: unknown) {
