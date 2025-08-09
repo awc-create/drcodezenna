@@ -60,7 +60,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    notified: false,
   },
   {
     id: 'ft-2',
@@ -76,7 +75,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    notified: false,
   },
   {
     id: 'ft-3',
@@ -92,7 +90,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    notified: false,
   },
   {
     id: 'ft-4',
@@ -108,6 +105,5 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    notified: false,
   },
 ];
