@@ -1,18 +1,16 @@
-// eslint-disable
-// @ts-nocheck
-// ^ Disables linting + type-checking for this file to avoid Next/ESLint conflicts
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { blogSchema } from '@/schemas/blog';
 
-// Helper to send JSON with status
 const json = (data: unknown, status = 200) =>
   NextResponse.json(data, { status });
 
 export async function GET(
   _req: Request,
+  // @ts-expect-error – Next.js type mismatch workaround for route params
   { params }: { params: { id: string } }
 ) {
   try {
@@ -27,12 +25,12 @@ export async function GET(
 
 export async function PUT(
   req: Request,
+  // @ts-expect-error – Next.js type mismatch workaround for route params
   { params }: { params: { id: string } }
 ) {
   try {
     const body = await req.json();
 
-    // Validate partial update
     const parsed = blogSchema.partial().safeParse(body);
     if (!parsed.success) {
       return json(
@@ -68,6 +66,7 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
+  // @ts-expect-error – Next.js type mismatch workaround for route params
   { params }: { params: { id: string } }
 ) {
   try {
