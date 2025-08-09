@@ -1,49 +1,37 @@
-// src/app/api/uploadthing/core.ts
-import { createUploadthing, type FileRouter } from "uploadthing/server";
-import { db } from "@/lib/db";
+import { createUploadthing, type FileRouter } from 'uploadthing/server';
+import { prisma } from '@/lib/prisma';
 
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  mediaUploader: f({ image: { maxFileSize: "4MB" } }).onUploadComplete(async ({ file }) => {
+  mediaUploader: f({ image: { maxFileSize: '4MB' } }).onUploadComplete(async ({ file }) => {
     try {
-      // ✅ Check if this file already exists in the DB by URL
-      const existing = await db.media.findFirst({
-        where: {
-          url: file.url,
-        },
-      });
-
+      // Check by URL to avoid exact duplicate rows
+      const existing = await prisma.media.findFirst({ where: { url: file.url } });
       if (existing) {
-        console.log("⚠️ File already exists in DB:", file.url);
-        return { success: true, skipped: true };
+        console.warn('⚠️ File already exists in DB:', file.url);
+        return { success: true as const, skipped: true as const };
       }
 
-      // ✅ Add to DB if new
-      const newEntry = await db.media.create({
+      const newEntry = await prisma.media.create({
         data: {
-          name: file.name ?? "untitled",
+          name: file.name ?? 'untitled',
           url: file.url,
-          size: Number(file.size) || 0,
-          type: file.type ?? "unknown",
+          size: typeof file.size === 'number' ? file.size : Number(file.size) || 0,
+          type: file.type ?? 'unknown',
         },
       });
 
-      // 🧹 Remove all *older* entries with the same name
-      await db.media.deleteMany({
-        where: {
-          name: file.name,
-          NOT: {
-            id: newEntry.id,
-          },
-        },
+      // Remove older entries with same name (keep latest)
+      await prisma.media.deleteMany({
+        where: { name: file.name ?? 'untitled', NOT: { id: newEntry.id } },
       });
 
       console.log(`✅ Uploaded and cleaned duplicates for: ${file.name}`);
-      return { success: true, skipped: false };
-    } catch (err) {
-      console.error("❌ UploadThing DB error:", err);
-      return { success: false };
+      return { success: true as const, skipped: false as const };
+    } catch (err: unknown) {
+      console.error('❌ UploadThing DB error:', err);
+      return { success: false as const };
     }
   }),
 } satisfies FileRouter;

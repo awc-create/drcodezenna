@@ -1,16 +1,15 @@
-// src/app/api/media/route.ts
-import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const media = await db.media.findMany({
-      orderBy: { uploaded: 'desc' }, // ✅ this now matches your model
+    const media = await prisma.media.findMany({
+      // change "uploadedAt" to your actual timestamp column
+      orderBy: { uploadedAt: 'desc' },
     });
-
-    return NextResponse.json(media); // ✅ Always return array
-  } catch (error) {
+    return NextResponse.json(media);
+  } catch (error: unknown) {
     console.error('Error fetching media:', error);
-    return NextResponse.json([], { status: 500 }); // ✅ still return an array on error
+    return NextResponse.json([], { status: 500 });
   }
 }
