@@ -2,14 +2,10 @@
 
 import { useState } from 'react';
 import styles from './PostListSelector.module.scss';
-
-interface Article {
-  title: string;
-  summary: string;
-}
+import type { BlogPost } from '@/types';
 
 interface Props {
-  posts: Article[];
+  posts: BlogPost[];
   onSelect: (index: number) => void;
   currentIndex: number;
 }
@@ -31,7 +27,7 @@ export default function PostListSelector({
         <ul className={styles.articleList}>
           {posts.map((post, idx) => (
             <li
-              key={idx}
+              key={post.id}
               className={`${styles.articleItem} ${
                 currentIndex === idx ? styles.active : ''
               }`}

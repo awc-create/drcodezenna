@@ -1,0 +1,17 @@
+.topNav {
+  margin: 1.5rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .heading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111;
+  }
+
+  .subtext {
+    font-size: 0.95rem;
+    color: #666;
+  }
+}

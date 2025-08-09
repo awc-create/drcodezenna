@@ -5,21 +5,28 @@
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  padding-bottom: 2rem;
 }
 
 .cardSection {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 2rem var(--gutter);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem var(--gutter);
   max-width: 1100px;
   margin: 0 auto;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr; // One column only on small screens
+    padding: 1.5rem;
+  }
 }
 
 .card {
   background: #f9f9f9;
   border: 1px solid #ccc;
-  padding: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 10px;
   cursor: pointer;
   transition: transform 0.2s ease;
   display: flex;
@@ -33,18 +40,20 @@
 
   h3 {
     margin-bottom: 0.5rem;
-    font-size: 1.25rem;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
   }
 
   .meta {
-    font-size: 0.9rem;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    font-style: italic;
     font-weight: 500;
     color: #555;
     margin-bottom: 1rem;
+    text-align: center;
   }
 
   p {
-    font-size: 1rem;
+    font-size: clamp(0.95rem, 3.5vw, 1.05rem);
     line-height: 1.6;
   }
 
@@ -58,8 +67,8 @@
   .tag {
     background: #e1e1e1;
     font-size: 0.75rem;
-    padding: 0.25rem 0.6rem;
-    border-radius: 12px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 9999px;
   }
 }
 
@@ -71,26 +80,30 @@
   max-width: 960px;
 }
 
+.featured {
+  padding: 1.5rem var(--gutter);
+}
 
 .lightboxContent {
   background: white;
-  padding: 2rem 2.5rem;
+  padding: 1.5rem;
+  width: 95%;
   max-width: 700px;
-  width: 100%;
   margin: 2rem auto;
   border-radius: 12px;
   font-family: 'Playfair Display', serif;
 
   h2 {
-    font-size: 2rem;
+    font-size: clamp(1.8rem, 5vw, 2rem);
     font-weight: 700;
     margin-bottom: 0.75rem;
     line-height: 1.3;
     color: #222;
+    text-align: center;
   }
 
   p {
-    font-size: 1.05rem;
+    font-size: clamp(1rem, 4vw, 1.15rem);
     line-height: 1.75;
     color: #333;
     margin-bottom: 1.25rem;
@@ -100,9 +113,80 @@
 
 .meta {
   font-style: italic;
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, 3vw, 0.95rem);
   color: #666;
   margin-bottom: 1.5rem;
+  text-align: center;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 2rem;
+  max-width: 1100px;
+  margin: 1rem auto;
 
+  select {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+  }
+
+  button.clearButton {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #222;
+    }
+  }
+}
+
+.noResults {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 2rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  button {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background: #222;
+    }
+  }
+
+  span {
+    font-size: 1rem;
+    color: #333;
+  }
+}

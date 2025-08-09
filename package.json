@@ -10,14 +10,22 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.0",
+    "@prisma/client": "^6.13.0",
+    "@uploadthing/react": "^7.3.2",
     "clsx": "^2.1.1",
     "lottie-react": "^2.4.1",
     "next": "15.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-pageflip": "^2.0.3",
-    "sass": "^1.89.2"
+    "react-select": "^5.10.2",
+    "resend": "^4.8.0",
+    "sass": "^1.89.2",
+    "sonner": "^2.0.6",
+    "uploadthing": "^7.7.3",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -27,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
+    "prisma": "6.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

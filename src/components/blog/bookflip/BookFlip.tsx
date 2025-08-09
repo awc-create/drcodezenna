@@ -1,31 +1,30 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import type { ComponentProps } from 'react';
 import styles from './BookFlip.module.scss';
-import ArticleLightbox from '../article/ArticleLightbox';
+import ArticleLightbox from '@/components/blog/article/ArticleLightbox';
 import Image from 'next/image';
+import type { BlogPost } from '@/types';
 
 export interface BookFlipHandle {
   flipToPage: (index: number) => void;
 }
 
-export interface Article {
-  title: string;
-  author: string;
-  summary: string;
-  image: string;
-  content: string;
-}
-
 interface BookFlipProps {
-  pages: Article[];
+  pages: BlogPost[];
   stopAutoflip: boolean;
-  onReadMore?: (article: Article) => void;
+  onReadMore?: (article: BlogPost) => void;
+  isMobile?: boolean;
 }
 
-// ✅ Manual typing for the flipRef
 interface FlipBookRef {
   pageFlip: () => {
     flip: (pageIndex: number) => void;
@@ -36,33 +35,51 @@ interface FlipBookRef {
 }
 
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
-  ({ pages, stopAutoflip, onReadMore }, ref) => {
+  ({ pages = [], stopAutoflip, onReadMore, isMobile = false }, ref) => {
     const flipRef = useRef<FlipBookRef | null>(null);
     const [isHovered, setIsHovered] = useState(false);
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+    const [selectedArticle, setSelectedArticle] = useState<BlogPost | null>(null);
 
+    // Public API for parent via ref
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
-        flipRef.current?.pageFlip().flip(index);
+        const flipInstance = flipRef.current?.pageFlip?.();
+        flipInstance?.flip?.(index);
       },
     }));
 
+    // Auto flip unless stopped or hovered
     useEffect(() => {
-      if (stopAutoflip) return;
+      if (stopAutoflip || pages.length === 0) return;
 
       const interval = setInterval(() => {
-        if (!isHovered && flipRef.current) {
-          const flip = flipRef.current.pageFlip();
-          const current = flip.getCurrentPageIndex();
-          const total = flip.getPageCount();
-          current >= total - 2 ? flip.flip(0) : flip.flipNext();
+        if (!isHovered && flipRef.current?.pageFlip) {
+          const flipInstance = flipRef.current.pageFlip();
+          if (
+            flipInstance &&
+            typeof flipInstance.getCurrentPageIndex === 'function' &&
+            typeof flipInstance.getPageCount === 'function' &&
+            typeof flipInstance.flipNext === 'function' &&
+            typeof flipInstance.flip === 'function'
+          ) {
+            const current = flipInstance.getCurrentPageIndex();
+            const total = flipInstance.getPageCount();
+
+            // ✅ ESLint-safe if/else
+            if (current >= total - 1) {
+              flipInstance.flip(0);
+            } else {
+              flipInstance.flipNext();
+            }
+          }
         }
       }, 6000);
 
       return () => clearInterval(interval);
-    }, [isHovered, stopAutoflip]);
+    }, [isHovered, stopAutoflip, pages]);
 
-    const handleReadMore = (article: Article) => {
+    // Local read more handler
+    const handleReadMore = (article: BlogPost) => {
       if (onReadMore) {
         onReadMore(article);
       } else {
@@ -70,32 +87,29 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       }
     };
 
-    const flipProps = {
-      width: 500,
+    // Flipbook props
+    const flipProps: ComponentProps<typeof HTMLFlipBook> = {
+      width: isMobile ? 360 : 500,
       height: 500,
-      minWidth: 315,
+      minWidth: 320,
       maxWidth: 1000,
       minHeight: 400,
       maxHeight: 1536,
-      maxShadowOpacity: 0.5,
+      usePortrait: isMobile,
       showCover: false,
-      mobileScrollSupport: false,
       size: 'fixed',
       drawShadow: false,
-      flippingTime: 1200,
-      usePortrait: false,
-      clickEventForward: true,
-      disableFlipByClick: false,
+      flippingTime: 1000,
       showPageCorners: false,
+      disableFlipByClick: isMobile,   // ✅ prevent accidental flips on mobile
+      clickEventForward: !isMobile,   // ✅ don’t forward taps on mobile
       useMouseEvents: true,
-      autoSize: false,
-      swipeDistance: 30,
-      startPage: 0,
-      startZIndex: 0,
-      renderOnlyPageLengthChange: false,
+      mobileScrollSupport: true,
       className: styles.book,
       style: { margin: '0 auto' },
-    } as ComponentProps<typeof HTMLFlipBook>; // ✅ cast to satisfy TS
+    };
+
+    const shouldShowLightbox = Boolean(selectedArticle) && !onReadMore;
 
     return (
       <>
@@ -114,30 +128,37 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                     width={400}
                     height={250}
                     className={styles.image}
-                    onError={(e) => console.warn('Image failed to load', e)}
                   />
                 </div>
                 <h2 className={styles.title}>{page.title}</h2>
                 <hr className={styles.divider} />
                 <p className={styles.author}>By {page.author}</p>
                 <p className={styles.summary}>{page.summary}</p>
-                <p
+
+                {/* ✅ Mobile tap-safe button */}
+                <button
+                  type="button"
                   className={styles.readMore}
-                  onClick={() => handleReadMore(page)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleReadMore(page);
+                  }}
+                  onTouchStart={(e) => e.stopPropagation()}
                 >
                   Read More <span className={styles.arrow}>→</span>
-                </p>
+                </button>
               </div>
             ))}
           </HTMLFlipBook>
         </div>
 
-        {selectedArticle && !onReadMore && (
+        {shouldShowLightbox && (
           <ArticleLightbox
-            title={selectedArticle.title}
-            author={selectedArticle.author}
-            image={selectedArticle.image}
-            content={selectedArticle.content}
+            title={selectedArticle!.title}
+            author={selectedArticle!.author}
+            image={selectedArticle!.image}
+            content={selectedArticle!.content}
             onClose={() => setSelectedArticle(null)}
           />
         )}

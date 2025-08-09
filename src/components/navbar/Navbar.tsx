@@ -8,7 +8,10 @@ import { NAV_LINKS } from "@/config/menu.config";
 export default function Navbar() {
   const pathname = usePathname();
 
-  const isLinkActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isAdmin = pathname.startsWith("/admin");
+
+  const isLinkActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
 
   const getFormattedDate = () => {
     const now = new Date();
@@ -17,6 +20,18 @@ export default function Navbar() {
       month: "2-digit",
       day: "2-digit",
     });
+  };
+
+  const getPageLabel = () => {
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments.length === 0) return "Home";
+
+    const formatted = segments.map(segment => {
+      const clean = segment.replace(/-/g, " ");
+      return clean.charAt(0).toUpperCase() + clean.slice(1);
+    });
+
+    return formatted.join(" / ");
   };
 
   return (
@@ -29,25 +44,27 @@ export default function Navbar() {
       <div className={styles.titleRow}>
         <span className={styles.date}>{getFormattedDate()}</span>
         <h1 className={styles.siteTitle}>DR. CODE</h1>
-        <span className={styles.homeLabel}>Home</span>
+        <span className={styles.homeLabel}>{getPageLabel()}</span>
       </div>
 
       <div className={styles.navBorder}></div>
 
-      <div className={styles.navLinks}>
-        {NAV_LINKS.map(({ slug, label }) => {
-          const href = `/${slug}`;
-          return (
-            <Link
-              key={slug}
-              href={href}
-              className={isLinkActive(href) ? styles.active : ""}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </div>
+      {!isAdmin && (
+        <div className={styles.navLinks}>
+          {NAV_LINKS.map(({ slug, label }) => {
+            const href = `/${slug}`;
+            return (
+              <Link
+                key={slug}
+                href={href}
+                className={isLinkActive(href) ? styles.active : ""}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       <div className={styles.bottomLine}></div>
     </nav>

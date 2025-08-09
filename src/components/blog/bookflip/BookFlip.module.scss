@@ -49,26 +49,29 @@
   }
 
   .readMore {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 1.5rem;
     font-weight: 600;
     font-size: 1rem;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     color: #003087;
     cursor: pointer;
     position: relative;
     transition: all 0.3s ease;
-    margin-top: 1.5rem;
 
     .arrow {
       display: inline-block;
       transition: transform 0.3s ease;
+      margin-left: 0.25rem;
     }
 
     &:hover {
       color: #000;
-
-      .arrow {
-        transform: translateX(5px);
-      }
+      .arrow { transform: translateX(5px); }
     }
   }
 }
