@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type MouseEvent,
 } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import styles from './BookFlip.module.scss';
@@ -40,9 +41,10 @@ type FlipProps = Omit<ComponentProps<typeof HTMLFlipBook>, 'children' | 'ref'>;
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages = [], stopAutoflip, onReadMore, isMobile = false }, ref) => {
     const flipRef = useRef<FlipBookRef | null>(null);
-    const [isHovered, setIsHovered] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [selectedArticle, setSelectedArticle] = useState<BlogPost | null>(null);
 
+    // public API
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
         const api = flipRef.current?.pageFlip?.();
@@ -50,28 +52,40 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       },
     }));
 
-    // Auto flip forward, loop at end
+    const api = () => flipRef.current?.pageFlip?.();
+    const flipNext = () => api()?.flipNext?.();
+    const flipPrev = () => api()?.flipPrev?.();
+
+    // stop page wobble during drag: block scroll while touching inside the book area
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const onTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      return () => el.removeEventListener('touchmove', onTouchMove);
+    }, []);
+
+    // simple auto-flip loop (respects stopAutoflip)
     useEffect(() => {
       if (stopAutoflip || pages.length === 0) return;
-
-      const interval = setInterval(() => {
-        if (isHovered) return;
-        const api = flipRef.current?.pageFlip?.();
-        if (!api) return;
-
-        const i = api.getCurrentPageIndex?.();
-        const n = api.getPageCount?.();
+      const t = setInterval(() => {
+        const p = api();
+        if (!p) return;
+        const i = p.getCurrentPageIndex?.();
+        const n = p.getPageCount?.();
         if (typeof i === 'number' && typeof n === 'number') {
           if (i >= n - 1) {
-            api.flip?.(0);
+            p.flip?.(0);
           } else {
-            api.flipNext?.();
+            p.flipNext?.();
           }
         }
       }, 6000);
-
-      return () => clearInterval(interval);
-    }, [isHovered, stopAutoflip, pages]);
+      return () => clearInterval(t);
+    }, [stopAutoflip, pages]);
 
     const handleReadMore = (article: BlogPost) => {
       if (onReadMore) {
@@ -81,7 +95,35 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       }
     };
 
-    // Corner drag + corner tap, without page jank
+    // corner-tap (we handle taps; library handles drags)
+    const handleCornerTap = (e: MouseEvent<HTMLDivElement>) => {
+      if (!isMobile) return;
+      const target = e.target as HTMLElement;
+      if (target.closest(`.${styles.readMore}`)) return; // allow button clicks
+
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // define "corner" as 22% of width/height (tweak if needed)
+      const cx = rect.width * 0.22;
+      const cy = rect.height * 0.22;
+
+      const inLeft = x <= cx;
+      const inRight = x >= rect.width - cx;
+      const inTop = y <= cy;
+      const inBottom = y >= rect.height - cy;
+
+      if ((inLeft && (inTop || inBottom)) || (inLeft && !inRight)) {
+        flipPrev();
+      } else if ((inRight && (inTop || inBottom)) || (inRight && !inLeft)) {
+        flipNext();
+      }
+    };
+
+    // flipbook props: drag corners enabled; disable built-in click so our taps & button work
     const flipProps: FlipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
@@ -94,13 +136,11 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       size: 'fixed',
       drawShadow: false,
       flippingTime: 900,
-      showPageCorners: true,      // draggable corners
-      disableFlipByClick: false,  // taps on halves flip
-      clickEventForward: false,   // let the book handle taps
+      showPageCorners: true,      // ✅ corner drag
+      disableFlipByClick: true,   // ❗ we handle corner taps ourselves
+      clickEventForward: true,    // ✅ inner buttons/links remain clickable
       useMouseEvents: true,
-
-      // KEY CHANGE: let the flipbook own touch gestures (prevents page “shake”)
-      mobileScrollSupport: false, // 👈 stops the page from trying to scroll while dragging
+      mobileScrollSupport: false, // ✅ prevents page scroll during drag
       swipeDistance: 12,
 
       className: styles.book,
@@ -117,9 +157,9 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     return (
       <>
         <div
+          ref={containerRef}
           className={styles.bookContainer}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onClick={handleCornerTap} // our corner-tap handler
         >
           <HTMLFlipBook {...flipProps} ref={flipRef}>
             {pages.map((page, index) => (
@@ -142,11 +182,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                 <button
                   type="button"
                   className={styles.readMore}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation(); // prevent accidental page flip
-                    handleReadMore(page);
-                  }}
+                  onClick={() => handleReadMore(page)}
                 >
                   Read More <span className={styles.arrow}>→</span>
                 </button>
