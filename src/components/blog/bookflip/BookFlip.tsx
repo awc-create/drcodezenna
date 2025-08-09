@@ -34,6 +34,9 @@ interface FlipBookRef {
   };
 }
 
+// Everything the component needs, except children/ref (those are provided in JSX)
+type FlipProps = Omit<ComponentProps<typeof HTMLFlipBook>, 'children' | 'ref'>;
+
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages = [], stopAutoflip, onReadMore, isMobile = false }, ref) => {
     const flipRef = useRef<FlipBookRef | null>(null);
@@ -43,24 +46,26 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     // Public API for parent via ref
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
-        const flipInstance = flipRef.current?.pageFlip?.();
-        flipInstance?.flip?.(index);
+        const api = flipRef.current?.pageFlip?.();
+        api?.flip?.(index);
       },
     }));
 
-    // Auto flip unless stopped or hovered
+    // Auto-flip unless stopped or hovered
     useEffect(() => {
       if (stopAutoflip || pages.length === 0) return;
 
       const interval = setInterval(() => {
+        if (isHovered) return;
         const api = flipRef.current?.pageFlip?.();
-        if (!isHovered && api) {
-          const current = api.getCurrentPageIndex?.();
-          const total = api.getPageCount?.();
-          if (typeof current === 'number' && typeof total === 'number') {
-            if (current >= total - 1) api.flip?.(0);
-            else api.flipNext?.();
-          }
+        if (!api) return;
+
+        const current = api.getCurrentPageIndex?.();
+        const total = api.getPageCount?.();
+
+        if (typeof current === 'number' && typeof total === 'number') {
+          if (current >= total - 1) api.flip?.(0);
+          else api.flipNext?.();
         }
       }, 6000);
 
@@ -72,8 +77,8 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       else setSelectedArticle(article);
     };
 
-    // Only specify the subset we care about, but keep type-safety
-    const flipProps = {
+    // Explicitly include props that the library marks as required
+    const flipProps: FlipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
       minWidth: 320,
@@ -82,7 +87,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       maxHeight: 1536,
       usePortrait: isMobile,
       showCover: false,
-      size: 'fixed' as const,
+      size: 'fixed',
       drawShadow: false,
       flippingTime: 1000,
       showPageCorners: false,
@@ -92,11 +97,14 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       mobileScrollSupport: true,
       className: styles.book,
       style: { margin: '0 auto' },
-      // If your installed typings mark these as required, uncomment:
-      // startPage: 0,
-      // startZIndex: 0,
-      // autoSize: true,
-    } satisfies Partial<ComponentProps<typeof HTMLFlipBook>>;
+
+      // Props that typings require (safe defaults)
+      startPage: 0,
+      startZIndex: 0,
+      autoSize: true,
+      maxShadowOpacity: 0, // we disabled shadows anyway
+      swipeDistance: 30,
+    };
 
     const shouldShowLightbox = Boolean(selectedArticle) && !onReadMore;
 
