@@ -1,46 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+import { blogSchema } from '@/schemas/blog'; // assumes you already have this
 
-type RouteContext = { params: Record<string, string | string[]> };
+// Helper: consistent JSON response
+const json = (data: unknown, status = 200) =>
+  NextResponse.json(data, { status });
 
-const getId = (params: RouteContext['params']): string => {
-  const raw = params.id;
-  return Array.isArray(raw) ? raw[0] : raw;
-};
-
-export async function GET(_req: NextRequest, { params }: RouteContext) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = getId(params);
-    const post = await prisma.blogPost.findUnique({ where: { id } });
-    if (!post) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-    return NextResponse.json(post);
+    const post = await prisma.blogPost.findUnique({ where: { id: params.id } });
+    if (!post) return json({ error: 'Not found' }, 404);
+    return json(post);
   } catch (err) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('GET /api/blog/[id] error:', err);
+    return json({ error: 'Server error' }, 500);
   }
 }
 
-export async function PUT(req: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = getId(params);
     const body = await req.json();
+
+    // Validate against your schema, but allow partial updates
+    const parsed = blogSchema.partial().safeParse(body);
+    if (!parsed.success) {
+      return json(
+        {
+          error: 'Validation failed',
+          issues: parsed.error.issues.map((i) => ({
+            path: i.path.join('.'),
+            message: i.message,
+          })),
+        },
+        400
+      );
+    }
+
+    // Ensure we don't accidentally write an empty object
+    if (Object.keys(parsed.data).length === 0) {
+      return json({ error: 'No valid fields to update' }, 400);
+    }
+
     const updated = await prisma.blogPost.update({
-      where: { id },
-      data: body,
+      where: { id: params.id },
+      data: parsed.data,
     });
-    return NextResponse.json(updated);
+
+    return json(updated);
   } catch (err) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('PUT /api/blog/[id] error:', err);
+
+    // Handle Prisma known errors (like record not found)
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2025') {
+        // An operation failed because it depends on one or more records that were required but not found
+        return json({ error: 'Not found' }, 404);
+      }
+    }
+    return json({ error: 'Server error' }, 500);
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = getId(params);
-    await prisma.blogPost.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    await prisma.blogPost.delete({ where: { id: params.id } });
+    return json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('DELETE /api/blog/[id] error:', err);
+
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2025') {
+        return json({ error: 'Not found' }, 404);
+      }
+    }
+    return json({ error: 'Server error' }, 500);
   }
 }
