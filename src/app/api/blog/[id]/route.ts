@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { blogSchema } from '@/schemas/blog';
 
+// Helper for consistent JSON responses
 const json = (data: unknown, status = 200) =>
   NextResponse.json(data, { status });
 
 export async function GET(
   _req: Request,
-  // @ts-expect-error – Next.js type mismatch workaround for route params
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const post = await prisma.blogPost.findUnique({ where: { id: params.id } });
+    const post = await prisma.blogPost.findUnique({
+      where: { id: context.params.id },
+    });
     if (!post) return json({ error: 'Not found' }, 404);
     return json(post);
   } catch (err) {
@@ -25,8 +25,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  // @ts-expect-error – Next.js type mismatch workaround for route params
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const body = await req.json();
@@ -50,14 +49,17 @@ export async function PUT(
     }
 
     const updated = await prisma.blogPost.update({
-      where: { id: params.id },
+      where: { id: context.params.id },
       data: parsed.data,
     });
 
     return json(updated);
   } catch (err) {
     console.error('PUT /api/blog/[id] error:', err);
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2025'
+    ) {
       return json({ error: 'Not found' }, 404);
     }
     return json({ error: 'Server error' }, 500);
@@ -66,15 +68,17 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  // @ts-expect-error – Next.js type mismatch workaround for route params
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    await prisma.blogPost.delete({ where: { id: params.id } });
+    await prisma.blogPost.delete({ where: { id: context.params.id } });
     return json({ success: true });
   } catch (err) {
     console.error('DELETE /api/blog/[id] error:', err);
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2025'
+    ) {
       return json({ error: 'Not found' }, 404);
     }
     return json({ error: 'Server error' }, 500);
