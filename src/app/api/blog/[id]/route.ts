@@ -4,18 +4,21 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { blogSchema } from '@/schemas/blog';
 
-// Small helper so we can avoid annotating the context and still be safe
-const getId = (ctx: any): string => {
-  const raw = ctx?.params?.id;
-  return Array.isArray(raw) ? raw[0] : String(raw);
-};
+// Type for params in this dynamic route
+type BlogRouteParams = { params: { id: string | string[] } };
+
+const getId = (rawId: string | string[]): string =>
+  Array.isArray(rawId) ? rawId[0] : rawId;
 
 const json = (data: unknown, status = 200) =>
   NextResponse.json(data, { status });
 
-export async function GET(_req: NextRequest, ctx: any) {
+export async function GET(
+  _req: NextRequest,
+  { params }: BlogRouteParams
+) {
   try {
-    const id = getId(ctx);
+    const id = getId(params.id);
     const post = await prisma.blogPost.findUnique({ where: { id } });
     if (!post) return json({ error: 'Not found' }, 404);
     return json(post);
@@ -25,12 +28,15 @@ export async function GET(_req: NextRequest, ctx: any) {
   }
 }
 
-export async function PUT(req: NextRequest, ctx: any) {
+export async function PUT(
+  req: NextRequest,
+  { params }: BlogRouteParams
+) {
   try {
-    const id = getId(ctx);
+    const id = getId(params.id);
     const body = await req.json();
 
-    // Allow partial updates, validate fields
+    // Validate with partial schema for updates
     const parsed = blogSchema.partial().safeParse(body);
     if (!parsed.success) {
       return json(
@@ -63,9 +69,12 @@ export async function PUT(req: NextRequest, ctx: any) {
   }
 }
 
-export async function DELETE(_req: NextRequest, ctx: any) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: BlogRouteParams
+) {
   try {
-    const id = getId(ctx);
+    const id = getId(params.id);
     await prisma.blogPost.delete({ where: { id } });
     return json({ success: true });
   } catch (err) {
