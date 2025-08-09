@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useEffect, useState } from 'react';
 import HeroHeader from '@/components/hero/HeroHeader';
@@ -7,18 +7,8 @@ import TeachingCard from '@/components/teaching/TeachingCard';
 import Lightbox from '@/components/shared/Lightbox';
 import styles from './Teaching.module.scss';
 import { useHeroData } from '@/hooks/useHeroData';
-
-type TeachingPost = {
-  id: string;
-  title: string;
-  school: string;
-  year: string;
-  type: string;
-  isCurrent: boolean;
-  tags: string[];
-  description: string;
-  fullText: string;
-};
+import type { TeachingPost } from '@/types';
+import { getAllTeachingPosts } from '@/utils/api';
 
 export default function TeachingClient() {
   const [lessons, setLessons] = useState<TeachingPost[]>([]);
@@ -28,27 +18,23 @@ export default function TeachingClient() {
 
   const { subtitle } = useHeroData('teaching');
 
+  // Load real teaching posts OR 4 fallbacks if none exist
   useEffect(() => {
-    const fetchLessons = async () => {
-      try {
-        const res = await fetch('/api/teaching');
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const sorted = data.sort((a, b) => parseInt(b.year) - parseInt(a.year));
-          setLessons(sorted);
-        }
-      } catch (err) {
-        console.error('Failed to fetch teaching posts:', err);
-      }
+    let cancelled = false;
+    (async () => {
+      const data = await getAllTeachingPosts(); // returns real or fallback
+      const sorted = [...data].sort((a, b) => Number(b.year) - Number(a.year));
+      if (!cancelled) setLessons(sorted);
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    fetchLessons();
   }, []);
 
   const handleCardClick = (lesson: TeachingPost) => setActiveLesson(lesson);
   const closeLightbox = () => setActiveLesson(null);
 
-  const totalPages = Math.ceil(lessons.length / itemsPerPage);
+  const totalPages = Math.ceil(lessons.length / itemsPerPage) || 1;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const paginatedLessons = lessons.slice(startIdx, startIdx + itemsPerPage);
 

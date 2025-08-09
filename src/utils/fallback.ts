@@ -1,9 +1,7 @@
-// src/utils/fallback.ts
 import type { BlogPost, TeachingPost } from '@/types';
 
-const FALLBACK_IMG = '/assets/fallback-blog.jpeg';
+const FALLBACK_IMG = '/assets/fallback-blog.jpeg'; // lives at public/assets/fallback-blog.jpeg
 
-// ---- BLOG FALLBACKS (no `updatedAt` on BlogPost) ----
 export const FALLBACK_BLOGS: BlogPost[] = [
   {
     id: 'fb-1',
@@ -13,7 +11,6 @@ export const FALLBACK_BLOGS: BlogPost[] = [
     image: FALLBACK_IMG,
     content: 'In a world of infinite feeds, literacy means interrogating sources…',
     createdAt: new Date().toISOString(),
-    // notified is optional in your UI types; omit unless required
   },
   {
     id: 'fb-2',
@@ -44,7 +41,6 @@ export const FALLBACK_BLOGS: BlogPost[] = [
   },
 ];
 
-// ---- TEACHING FALLBACKS (TeachingPost DOES have `updatedAt`) ----
 export const FALLBACK_TEACHING: TeachingPost[] = [
   {
     id: 'ft-1',
@@ -56,8 +52,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     tags: ['media', 'society', 'theory'],
     description: 'Foundations of media theory, bias, and representation.',
     fullText: 'Syllabus overview, weekly topics, assessment structure…',
-    startDate: undefined,
-    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -71,8 +65,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     tags: ['methods', 'qualitative'],
     description: 'Interviews, coding transcripts, thematic maps.',
     fullText: 'Practice sessions, coding frameworks, sample assignments…',
-    startDate: undefined,
-    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -86,8 +78,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     tags: ['writing', 'public'],
     description: 'Turn research into op-eds and accessible essays.',
     fullText: 'Pitching, structure, voice, and editorial feedback…',
-    startDate: undefined,
-    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -101,8 +91,6 @@ export const FALLBACK_TEACHING: TeachingPost[] = [
     tags: ['history', 'technology'],
     description: 'From print to platform: tech that reshaped discourse.',
     fullText: 'Timelines, key movements, and primary sources…',
-    startDate: undefined,
-    endDate: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

@@ -29,12 +29,12 @@ interface FlipBookRef {
   pageFlip: () => {
     flip: (pageIndex: number) => void;
     flipNext: () => void;
+    flipPrev: () => void;
     getCurrentPageIndex: () => number;
     getPageCount: () => number;
   };
 }
 
-// Everything the component needs, except children/ref (those are provided in JSX)
 type FlipProps = Omit<ComponentProps<typeof HTMLFlipBook>, 'children' | 'ref'>;
 
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
@@ -43,15 +43,15 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     const [isHovered, setIsHovered] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<BlogPost | null>(null);
 
-    // Public API for parent via ref
+    // Public API for parent
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
         const api = flipRef.current?.pageFlip?.();
-        api?.flip?.(index);
+        if (api?.flip) api.flip(index);
       },
     }));
 
-    // Auto-flip unless stopped or hovered
+    // Auto flip forward, loop at end
     useEffect(() => {
       if (stopAutoflip || pages.length === 0) return;
 
@@ -60,12 +60,14 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
         const api = flipRef.current?.pageFlip?.();
         if (!api) return;
 
-        const current = api.getCurrentPageIndex?.();
-        const total = api.getPageCount?.();
-
-        if (typeof current === 'number' && typeof total === 'number') {
-          if (current >= total - 1) api.flip?.(0);
-          else api.flipNext?.();
+        const i = api.getCurrentPageIndex?.();
+        const n = api.getPageCount?.();
+        if (typeof i === 'number' && typeof n === 'number') {
+          if (i >= n - 1) {
+            api.flip?.(0);
+          } else {
+            api.flipNext?.();
+          }
         }
       }, 6000);
 
@@ -73,11 +75,14 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     }, [isHovered, stopAutoflip, pages]);
 
     const handleReadMore = (article: BlogPost) => {
-      if (onReadMore) onReadMore(article);
-      else setSelectedArticle(article);
+      if (onReadMore) {
+        onReadMore(article);
+      } else {
+        setSelectedArticle(article);
+      }
     };
 
-    // Explicitly include props that the library marks as required
+    // Enable corner drag & side-tap flipping
     const flipProps: FlipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
@@ -85,25 +90,25 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       maxWidth: 1000,
       minHeight: 400,
       maxHeight: 1536,
-      usePortrait: isMobile,
+      usePortrait: isMobile,      // single page on phones
       showCover: false,
       size: 'fixed',
       drawShadow: false,
-      flippingTime: 1000,
-      showPageCorners: false,
-      disableFlipByClick: isMobile, // prevent accidental flips on mobile
-      clickEventForward: !isMobile, // don’t forward taps on mobile
+      flippingTime: 900,
+      showPageCorners: true,      // ✅ draggable corners
+      disableFlipByClick: false,  // ✅ taps on left/right flip back/forward
+      clickEventForward: false,   // let flipbook handle taps
       useMouseEvents: true,
       mobileScrollSupport: true,
+      swipeDistance: 12,          // easier to start drag on mobile
+
       className: styles.book,
       style: { margin: '0 auto' },
 
-      // Props that typings require (safe defaults)
       startPage: 0,
       startZIndex: 0,
       autoSize: true,
-      maxShadowOpacity: 0, // we disabled shadows anyway
-      swipeDistance: 30,
+      maxShadowOpacity: 0,
     };
 
     const shouldShowLightbox = Boolean(selectedArticle) && !onReadMore;
@@ -125,6 +130,7 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                     width={400}
                     height={250}
                     className={styles.image}
+                    priority={index < 2}
                   />
                 </div>
                 <h2 className={styles.title}>{page.title}</h2>
@@ -137,10 +143,9 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                   className={styles.readMore}
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
+                    e.stopPropagation(); // prevent accidental page flip
                     handleReadMore(page);
                   }}
-                  onTouchStart={(e) => e.stopPropagation()}
                 >
                   Read More <span className={styles.arrow}>→</span>
                 </button>
