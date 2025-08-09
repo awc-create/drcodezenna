@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type MouseEvent,
 } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import styles from './BookFlip.module.scss';
@@ -38,13 +37,22 @@ interface FlipBookRef {
 
 type FlipProps = Omit<ComponentProps<typeof HTMLFlipBook>, 'children' | 'ref'>;
 
+const AUTO_INTERVAL_MS = 6000;   // normal cadence
+const MANUAL_PAUSE_MS = 5000;    // pause after *manual* flip
+const JUST_FLIPPED_WINDOW = 250; // ms to detect “we just flipped”
+
 const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages = [], stopAutoflip, onReadMore, isMobile = false }, ref) => {
     const flipRef = useRef<FlipBookRef | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+
     const [selectedArticle, setSelectedArticle] = useState<BlogPost | null>(null);
 
-    // public API
+    // auto scheduling
+    const timerRef = useRef<number | null>(null);
+    const isAutoRef = useRef(false);
+    const justFlippedRef = useRef(false);
+
     useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
         const api = flipRef.current?.pageFlip?.();
@@ -53,77 +61,69 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
     }));
 
     const api = () => flipRef.current?.pageFlip?.();
-    const flipNext = () => api()?.flipNext?.();
-    const flipPrev = () => api()?.flipPrev?.();
 
-    // stop page wobble during drag: block scroll while touching inside the book area
-    useEffect(() => {
-      const el = containerRef.current;
-      if (!el) return;
+    const clearAuto = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
 
-      const onTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
-      };
-      el.addEventListener('touchmove', onTouchMove, { passive: false });
-      return () => el.removeEventListener('touchmove', onTouchMove);
-    }, []);
-
-    // simple auto-flip loop (respects stopAutoflip)
-    useEffect(() => {
+    const scheduleAuto = (delay: number) => {
       if (stopAutoflip || pages.length === 0) return;
-      const t = setInterval(() => {
+      clearAuto();
+      timerRef.current = window.setTimeout(() => {
         const p = api();
         if (!p) return;
+        isAutoRef.current = true; // mark that this next flip is automatic
         const i = p.getCurrentPageIndex?.();
         const n = p.getPageCount?.();
         if (typeof i === 'number' && typeof n === 'number') {
-          if (i >= n - 1) {
-            p.flip?.(0);
-          } else {
-            p.flipNext?.();
-          }
+          if (i >= n - 1) p.flip?.(0);
+          else p.flipNext?.();
         }
-      }, 6000);
-      return () => clearInterval(t);
-    }, [stopAutoflip, pages]);
+      }, delay);
+    };
+
+    // initial (or when deps change)
+    useEffect(() => {
+      clearAuto();
+      if (!stopAutoflip && pages.length > 0) scheduleAuto(AUTO_INTERVAL_MS);
+      return clearAuto;
+    }, [stopAutoflip, pages.length]);
+
+    // When *any* flip finishes, restart the timer:
+    // - auto flip → full AUTO_INTERVAL_MS
+    // - manual flip → MANUAL_PAUSE_MS
+    const handleOnFlip = () => {
+      justFlippedRef.current = true;
+      setTimeout(() => { justFlippedRef.current = false; }, JUST_FLIPPED_WINDOW);
+
+      const wasAuto = isAutoRef.current;
+      isAutoRef.current = false;
+
+      clearAuto();
+      scheduleAuto(wasAuto ? AUTO_INTERVAL_MS : MANUAL_PAUSE_MS);
+    };
 
     const handleReadMore = (article: BlogPost) => {
-      if (onReadMore) {
-        onReadMore(article);
-      } else {
-        setSelectedArticle(article);
+      if (onReadMore) onReadMore(article);
+      else setSelectedArticle(article);
+      // we do NOT touch timers here; we rely on onFlip only
+    };
+
+    // Pause only the AUTO if the user starts interacting,
+    // and resume after: if a flip happens, onFlip handles pause; if not, resume normal cadence.
+    const handlePointerDown = () => {
+      clearAuto(); // stop any imminent auto flip while user is dragging/tapping
+    };
+    const handlePointerUp = () => {
+      // if we didn't actually flip, resume normal cadence
+      if (!justFlippedRef.current) {
+        scheduleAuto(AUTO_INTERVAL_MS);
       }
     };
 
-    // corner-tap (we handle taps; library handles drags)
-    const handleCornerTap = (e: MouseEvent<HTMLDivElement>) => {
-      if (!isMobile) return;
-      const target = e.target as HTMLElement;
-      if (target.closest(`.${styles.readMore}`)) return; // allow button clicks
-
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      // define "corner" as 22% of width/height (tweak if needed)
-      const cx = rect.width * 0.22;
-      const cy = rect.height * 0.22;
-
-      const inLeft = x <= cx;
-      const inRight = x >= rect.width - cx;
-      const inTop = y <= cy;
-      const inBottom = y >= rect.height - cy;
-
-      if ((inLeft && (inTop || inBottom)) || (inLeft && !inRight)) {
-        flipPrev();
-      } else if ((inRight && (inTop || inBottom)) || (inRight && !inLeft)) {
-        flipNext();
-      }
-    };
-
-    // flipbook props: drag corners enabled; disable built-in click so our taps & button work
     const flipProps: FlipProps = {
       width: isMobile ? 360 : 500,
       height: 500,
@@ -131,21 +131,22 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
       maxWidth: 1000,
       minHeight: 400,
       maxHeight: 1536,
-      usePortrait: isMobile,
+      usePortrait: isMobile,     // single page on phones
       showCover: false,
       size: 'fixed',
       drawShadow: false,
-      flippingTime: 900,
-      showPageCorners: true,      // ✅ corner drag
-      disableFlipByClick: true,   // ❗ we handle corner taps ourselves
-      clickEventForward: true,    // ✅ inner buttons/links remain clickable
+      flippingTime: 850,         // snappy finish
+      showPageCorners: true,     // real corner drag + corner taps
+      disableFlipByClick: false, // built-in tap to flip (left/back, right/forward)
+      clickEventForward: true,   // keep inner buttons clickable
       useMouseEvents: true,
-      mobileScrollSupport: false, // ✅ prevents page scroll during drag
-      swipeDistance: 12,
+      mobileScrollSupport: false, // flip owns the touch
+      swipeDistance: 6,          // tiny pull still flips (prevents “fall back”)
+
+      onFlip: handleOnFlip,
 
       className: styles.book,
       style: { margin: '0 auto' },
-
       startPage: 0,
       startZIndex: 0,
       autoSize: true,
@@ -159,7 +160,8 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
         <div
           ref={containerRef}
           className={styles.bookContainer}
-          onClick={handleCornerTap} // our corner-tap handler
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
         >
           <HTMLFlipBook {...flipProps} ref={flipRef}>
             {pages.map((page, index) => (
@@ -182,7 +184,10 @@ const BookFlip = forwardRef<BookFlipHandle, BookFlipProps>(
                 <button
                   type="button"
                   className={styles.readMore}
-                  onClick={() => handleReadMore(page)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // avoid treating it as a flip tap
+                    handleReadMore(page);
+                  }}
                 >
                   Read More <span className={styles.arrow}>→</span>
                 </button>
