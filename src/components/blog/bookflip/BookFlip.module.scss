@@ -1,109 +1,52 @@
+/* Fast BookFlip styles: skeleton, windowed placeholders, gated overlays */
+
+/* Container */
 .bookContainer {
   padding: 2rem 1rem;
-  display: flex;
-  justify-content: center;
-}
-
-.book {
-  box-shadow: none;
-}
-
-.page {
-  background: white;
-  padding: 2rem;
-  border: 1px solid #ccc;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  height: 100%;
-
-  .image {
-    height: 200px;
-    width: 100%;
-    object-fit: cover;
-    background: #dcdcdc;
-    margin-bottom: 1rem;
-    border: 1px solid #ccc;
-  }
-
-  .title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-  }
-
-  .author {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #444;
-    margin-bottom: 1rem;
-  }
-
-  .summary {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #333;
-    flex-grow: 1;
-  }
-
-  .readMore {
-    appearance: none;
-    background: none;
-    border: none;
-    padding: 0;
-    margin-top: 1.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    display: inline-flex;
-    align-items: center;
-    color: #003087;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s ease;
-
-    .arrow {
-      display: inline-block;
-      transition: transform 0.3s ease;
-      margin-left: 0.25rem;
-    }
-
-  }
-}
-
-.bookContainer {
-  padding: 2rem 1rem;        /* desktop/tablet default */
   display: flex;
   justify-content: center;
   position: relative;
   overscroll-behavior: contain;
 }
 
-@media (max-width: 767px) {
-  .bookContainer {
-    /* tweak these if you want more/less padding */
-    --side-pad: clamp(16px, 6vw, 28px);
-    --vert-pad: clamp(12px, 4vh, 24px);
-
-    padding-left:  calc(1rem + var(--side-pad) + env(safe-area-inset-left, 0px));
-    padding-right: calc(1rem + var(--side-pad) + env(safe-area-inset-right, 0px));
-    padding-top:    calc(2rem + var(--vert-pad) + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(2rem + var(--vert-pad) + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-
+/* Flipbook root */
 .book {
+  position: relative;
   box-shadow: none;
-  touch-action: none;            /* prevent page scroll during drag */
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   will-change: transform;
+  cursor: grab;
+}
+.book:active { cursor: grabbing; }
+
+/* Overlay anchor */
+.bookWrap {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
 }
 
+/* ---------- Skeleton while not in view ---------- */
+.bookSkeleton {
+  width: 100%;
+  height: 520px;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, #f3f3f3 25%, #ececec 37%, #f3f3f3 63%);
+  background-size: 400% 100%;
+  animation: skel 1.2s ease-in-out infinite;
+  box-shadow: 0 4px 10px rgba(0,0,0,.06);
+}
+@keyframes skel {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* ---------- Page styles ---------- */
 .page {
-  background: white;
+  background: #fff;
   padding: 2rem;
   border: 1px solid #ccc;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.06);
@@ -113,69 +56,121 @@
   height: 100%;
   will-change: transform;
 
-  .imageWrapper {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
+  .imageWrapper { width: 100%; margin-bottom: 1rem; }
 
   .image {
-    height: 200px;
-    width: 100%;
-    object-fit: cover;
-    background: #dcdcdc;
+    height: 200px; width: 100%;
+    object-fit: cover; background: #dcdcdc;
     border: 1px solid #ccc;
-    pointer-events: none;        /* don’t steal drags */
-    user-select: none;
-    -webkit-user-select: none;
+    pointer-events: none;
+    user-select: none; -webkit-user-select: none;
   }
 
-  .title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-  }
-
-  .author {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #444;
-    margin-bottom: 1rem;
-  }
-
-  .summary {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #333;
-    flex-grow: 1;
-  }
+  .title  { font-size: 1.4rem; font-weight: 700; line-height: 1.3; margin-bottom: .5rem; }
+  .author { font-weight: 600; font-size: 1rem; color: #444; margin-bottom: 1rem; }
+  .summary{ font-size: 1rem; line-height: 1.6; color: #333; flex-grow: 1; }
 
   .readMore {
-    appearance: none;
-    background: none;
-    border: none;
-    padding: 0;
-    margin-top: 1.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    display: inline-flex;
-    align-items: center;
-    color: #003087;
-    cursor: pointer;
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;  /* taps only, no drag */
-  }
-
-  .arrow {
-    display: inline-block;
-    margin-left: 0.25rem;
+    appearance: none; background: none; border: none; padding: 0; margin-top: 1.5rem;
+    font-weight: 600; font-size: 1rem; display: inline-flex; align-items: center;
+    color: #003087; cursor: pointer; position: relative;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    .arrow { display: inline-block; margin-left: .25rem; transition: transform .3s ease; }
   }
 }
 
-/* Optional: style for the <hr className={styles.divider}> if you use it */
+/* Lightweight placeholder inside far pages */
+.pagePlaceholder {
+  height: 250px;
+  width: 100%;
+  border: 1px solid #eaeaea;
+  background: #f5f5f5;
+  margin-bottom: 1rem;
+}
+
 .divider {
   border: none;
   border-top: 1px solid #e5e5e5;
-  margin: 0.75rem 0 1rem;
+  margin: .75rem 0 1rem;
+}
+
+/* ---------- Overlays (gated until book is ready) ---------- */
+.edgeHints,
+.cornerPeel {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .18s ease;
+}
+.bookWrap[data-ready="1"] .edgeHints,
+.bookWrap[data-ready="1"] .cornerPeel {
+  opacity: 1;
+  visibility: visible;
+}
+
+.edgeHints {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+}
+
+/* Label: center on single page; center of RIGHT page on spread */
+.edgeLabel {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: clamp(12px, 1.2vw, 14px);
+  color: #333;
+  box-shadow: 0 4px 10px rgba(0,0,0,.08);
+  white-space: nowrap;
+}
+.bookWrap[data-spread="1"] .edgeLabel { left: 75%; transform: translateX(-50%); }
+
+/* Static corner peel (no animation) */
+.cornerPeel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  z-index: 60;
+}
+.cornerPeel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(135deg, #f7f7f7 0%, #ffffff 60%);
+  box-shadow:
+    -8px -8px 14px rgba(0, 0, 0, 0.08) inset,
+    -1px -1px 0 rgba(0, 0, 0, 0.06) inset;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-right: 1px solid rgba(0,0,0,0.08);
+}
+.cornerPeel::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 86px;
+  height: 86px;
+  pointer-events: none;
+  background: radial-gradient(70px 70px at 100% 100%,
+    rgba(0,0,0,0.18), rgba(0,0,0,0) 65%);
+  filter: blur(1px);
+  transform: translate(4px, 4px);
+  opacity: .55;
+}
+/* Hide peel after first interaction/flip */
+.cornerPeel[data-active="0"] { opacity: 0; visibility: hidden; }
+
+@media (max-width: 767px) {
+  .cornerPeel { width: 72px; height: 72px; }
 }

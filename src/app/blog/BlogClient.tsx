@@ -5,6 +5,7 @@ import HeroHeader from '@/components/hero/HeroHeader';
 import BookFlip, { BookFlipHandle } from '@/components/blog/bookflip/BookFlip';
 import PostListSelector from '@/components/blog/postlist/PostListSelector';
 import LightboxArticle from '@/components/blog/article/ArticleLightbox';
+import FlipHint from '@/components/blog/controls/FlipHint'; // ← NEW
 import styles from './Blog.module.scss';
 import { BlogPost } from '@/types';
 import { getAllBlogPosts } from '@/utils/api';
@@ -20,7 +21,6 @@ export default function BlogClient() {
 
   const { subtitle } = useHeroData('blog');
 
-  // 🔄 Load blog posts
   useEffect(() => {
     const fetchPosts = async () => {
       const data = await getAllBlogPosts();
@@ -29,7 +29,6 @@ export default function BlogClient() {
     fetchPosts();
   }, []);
 
-  // 📱 Mobile check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -43,13 +42,8 @@ export default function BlogClient() {
     flipRef.current?.flipToPage(index);
   };
 
-  const handleReadMore = (article: BlogPost) => {
-    setSelectedArticle(article);
-  };
-
-  const handleCloseLightbox = () => {
-    setSelectedArticle(null);
-  };
+  const handleReadMore = (article: BlogPost) => setSelectedArticle(article);
+  const handleCloseLightbox = () => setSelectedArticle(null);
 
   return (
     <main className={styles.blog}>
@@ -75,6 +69,13 @@ export default function BlogClient() {
         onReadMore={handleReadMore}
         isMobile={isMobile}
       />
+
+      {isMobile && (
+        <FlipHint
+          onPrev={() => flipRef.current?.flipPrev?.()}
+          onNext={() => flipRef.current?.flipNext?.()}
+        />
+      )}
 
       {selectedArticle && (
         <LightboxArticle
