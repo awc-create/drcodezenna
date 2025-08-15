@@ -1,3 +1,4 @@
+// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -5,7 +6,7 @@ import bcrypt from "bcryptjs";
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").toLowerCase();
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Admin login",
@@ -22,6 +23,7 @@ export const authOptions: NextAuthOptions = {
         const ok = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
         if (!ok) return null;
 
+        // Include role; cast to any to satisfy NextAuth's default User type
         return { id: "admin", name: "Admin", email, role: "admin" } as any;
       },
     }),
@@ -32,8 +34,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user?.email && (user as any).role) (token as any).role = (user as any).role;
-      else if (token?.email) (token as any).role =
-        token.email.toLowerCase() === ADMIN_EMAIL ? "admin" : "user";
+      else if (token?.email)
+        (token as any).role = token.email.toLowerCase() === ADMIN_EMAIL ? "admin" : "user";
       return token;
     },
     async session({ session, token }) {
@@ -50,7 +52,7 @@ export const authOptions: NextAuthOptions = {
       name: "__Secure-admin.session-token",
       options: {
         httpOnly: true,
-        secure: process.env.NODE_ENV !== "development", // true in prod
+        secure: process.env.NODE_ENV !== "development",
         sameSite: "lax",
         path: "/", // no domain => host-only on admin.drcodezenna.com
       },
