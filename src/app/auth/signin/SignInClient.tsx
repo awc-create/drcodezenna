@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
-export default function SignIn() {
+export default function SignInClient() {
   const sp = useSearchParams();
   const callbackUrl = sp.get("callbackUrl") || "/admin";
 
@@ -34,13 +34,23 @@ export default function SignIn() {
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
         <label>
           <div>Email</div>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                 autoComplete="username" required />
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="username"
+            required
+          />
         </label>
         <label>
           <div>Password</div>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                 autoComplete="current-password" required />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
         </label>
         {err && <p style={{ color: "crimson" }}>{err}</p>}
         <button type="submit" disabled={submitting}>
