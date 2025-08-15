@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Gloock&display=swap');
+@import "tailwindcss";
 
 /* ======================= */
 /* 🌍 LIGHT / DARK SCHEMES */
@@ -98,13 +99,16 @@ main {
   z-index: -1;
 }
 
-.newspaper-divider {
-  border: none;
-  border-top: 2px dotted #999;
-  margin: 2rem auto 0 auto;
-  width: 90%;
-  max-width: 800px;
+@media (max-width: 768px) {
+  .newspaper-divider {
+    border: none;
+    border-top: 2px dotted #999;
+    margin: 2rem auto 0 auto;
+    width: 90%;
+    max-width: 800px;
+  }
 }
+
 
 /* ======================= */
 /* 📦 CONTAINER            */

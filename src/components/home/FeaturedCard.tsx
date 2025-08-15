@@ -2,6 +2,7 @@
 
 import styles from "./FeaturedCard.module.scss";
 import Link from "next/link";
+import SubscribeBox from '@/components/common/SubscribeBox';
 
 export default function FeaturedCard() {
   return (
@@ -23,6 +24,8 @@ export default function FeaturedCard() {
       <Link href="/blog" className={styles.turnPage}>
         <em>Turn the page</em> <span className={styles.downArrow}>↓</span>
       </Link>
+
+      <SubscribeBox />
     </section>
   );
 }

@@ -1,0 +1,42 @@
+.hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 360px;         /* matches mobile book width */
+  margin-inline: auto;
+  text-align: center;
+}
+
+.text {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 9999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Hide on larger screens */
+@media (min-width: 768px) {
+  .hint { display: none; }
+}

@@ -1,11 +1,11 @@
 .home {
   background: white;
-  color: rgb(187, 167, 167);
   font-family: 'Playfair Display', serif;
   margin-top: -1.4rem;
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  padding: 3rem 2rem;
 }
 
 /* 🔥 HERO SECTION */
@@ -17,9 +17,8 @@
 
   width: 100%;
   max-width: 960px;
-  width: 100%;
-  max-width: 960px;
-  position: relative;
+  margin-inline: auto;
+  padding-inline: 1rem;
 
   .left {
     position: relative;

@@ -1,12 +1,16 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import HeroHeader from "@/components/hero/HeroHeader";
-import styles from "./page.module.scss";
-import FeaturedCard from "@/components/home/FeaturedCard";
+import { useState } from 'react';
+import HeroHeader from '@/components/hero/HeroHeader';
+import FeaturedCard from '@/components/home/FeaturedCard';
+import { useHeroData } from '@/hooks/useHeroData';
+import styles from './page.module.scss';
 
 export default function HomePage() {
   const [expanded, setExpanded] = useState(false);
+  const { subtitle, bio } = useHeroData('home');
+
+  const [bioIntro, bioFull] = (bio || '').split('||'); // Optional: use || to split intro/full
 
   return (
     <main className={styles.home}>
@@ -16,31 +20,24 @@ export default function HomePage() {
             DR. ODERA<br />EZENNA
           </>
         }
-        subtitle={
-          <>
-            Crafted in language,<br />carried by purpose.
-          </>
-        }
+        subtitle={subtitle}
       />
 
       <hr className={styles.divider} />
 
       <section className={styles.bioSection}>
         <p className={styles.bio}>
-          I&apos;m a writer, a master of ideas. Armed with degrees and an unrepentant love for semicolons,
-          I explore the intricate dance of education and writing.
-          {expanded && (
-            <>
-              {" "}
-              My passion lies in blending narrative with knowledge, shaping thoughts through words.
-              With a background in academia and a voice rooted in culture, I continue to write with purpose,
-              provoke thought, and pass on the gift of expression.
-            </>
-          )}
+          {bioIntro}
+          {expanded && bioFull && ' ' + bioFull}
         </p>
-        <button className={styles.readMore} onClick={() => setExpanded(prev => !prev)}>
-          → {expanded ? "Read Less" : "Read More"}
-        </button>
+        {bioFull && (
+          <button
+            className={styles.readMore}
+            onClick={() => setExpanded((prev) => !prev)}
+          >
+            → {expanded ? 'Read Less' : 'Read More'}
+          </button>
+        )}
       </section>
 
       <FeaturedCard />

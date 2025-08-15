@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model HeroSection {
+  id        String   @id @default(cuid())
+  image     String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subtitles HeroSubtitle[]
+  bios      HeroBio[]
+}
+
+model HeroSubtitle {
+  id         String   @id @default(cuid())
+  page       String
+  subtitle   String
+  heroId     String
+  hero       HeroSection @relation(fields: [heroId], references: [id])
+}
+
+model HeroBio {
+  id         String   @id @default(cuid())
+  page       String
+  content    String
+  heroId     String
+  hero       HeroSection @relation(fields: [heroId], references: [id])
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  title     String
+  author    String
+  summary   String
+  content   String
+  image     String
+  createdAt DateTime @default(now())
+  Media     Media?   @relation(fields: [mediaId], references: [id])
+  mediaId   String?
+  notified  Boolean  @default(false)
+}
+
+model TeachingPost {
+  id          String   @id @default(cuid())
+  title       String
+  school      String
+  year        String
+  type        String
+  isCurrent   Boolean  @default(false)
+  tags        String[]
+  description String
+  fullText    String
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  notified    Boolean  @default(false)
+}
+
+model Media {
+  id        String     @id @default(cuid())
+  url       String
+  name      String
+  size      Int
+  type      String
+  uploaded  DateTime   @default(now())
+  blogPosts BlogPost[]
+}
+
+model Subscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  interests    String[] // array of interest tags
+  location     String? // optional
+  subscribedAt DateTime @default(now())
+}
