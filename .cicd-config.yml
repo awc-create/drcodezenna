@@ -1,4 +1,12 @@
 project_type: static
+slug: drcodezenna
+port: 3000
+
+domains:
+  prod: drcodezenna.com
+  admin: admin.drcodezenna.com
+
 deploy_targets:
   main-hetz: hetzner
-  deploy_to: vercel
+  dev: vercel
+  preview: vercel

@@ -1,0 +1,30 @@
+# Node / Next build artifacts
+.next/
+out/
+dist/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env & misc
+.env
+.env.*.local
+.env.local
+.DS_Store
+
+# git
+.git
+.gitignore
+
+# editor/IDE
+.vscode/
+.idea/
+
+# Docker context noise
+docker-compose.yml
+Dockerfile*
