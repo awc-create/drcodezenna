@@ -1,4 +1,4 @@
-project_type: static
+project_type: node
 slug: drcodezenna
 port: 3000
 
