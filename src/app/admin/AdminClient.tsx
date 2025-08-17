@@ -7,14 +7,16 @@ import BlogPosts from '@/components/admin/blog/BlogPosts';
 import HeroSettings from '@/components/admin/settings/HeroSection';
 import Subscribers from '@/components/admin/subscriber/Subscribers';
 import TeachingPosts from '@/components/admin/teaching/TeachingPosts';
+import EmailCenter from '@/components/admin/email/EmailCenter';
 
-type SectionKey = 'blog' | 'hero' | 'teaching' | 'subscribers';
+type SectionKey = 'blog' | 'hero' | 'teaching' | 'subscribers' | 'email';
 
 const sections: { key: SectionKey; label: string }[] = [
   { key: 'blog', label: 'Blog Posts' },
   { key: 'hero', label: 'Hero Section' },
   { key: 'teaching', label: 'Teaching' },
   { key: 'subscribers', label: 'Subscribers' },
+  { key: 'email', label: 'Email' },
 ];
 
 export default function AdminClient() {
@@ -30,6 +32,8 @@ export default function AdminClient() {
         return <Subscribers count={subscriberCount} setCount={setSubscriberCount} />;
       case 'teaching':
         return <TeachingPosts />;
+      case 'email':
+        return <EmailCenter />;
       case 'blog':
       default:
         return <BlogPosts />;
