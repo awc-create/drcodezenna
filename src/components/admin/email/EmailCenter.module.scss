@@ -9,7 +9,18 @@
 }
 
 .block { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1rem; }
-input, textarea, select { padding:.5rem .6rem; border:1px solid #ccc; border-radius:6px; font-size:1rem; }
+
+/* 👇 Scope form element styles under a local class to satisfy CSS Modules */
+.formControls {
+  input,
+  textarea,
+  select {
+    padding:.5rem .6rem;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:1rem;
+  }
+}
 
 .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; }
 .periodLabel { color:#555; margin: .25rem 0 1rem; }

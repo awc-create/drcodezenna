@@ -30,7 +30,7 @@ export default function EmailCenter() {
   const [selectedBlogIds, setSelectedBlogIds] = useState<Set<string>>(new Set());
   const [selectedTeachingIds, setSelectedTeachingIds] = useState<Set<string>>(new Set());
 
-  // fetch posts/teaching (expects /api/blog and /api/teaching to return arrays incl. id,title,createdAt)
+  // fetch posts/teaching
   useEffect(() => {
     const run = async () => {
       setLoading(true);
@@ -54,7 +54,7 @@ export default function EmailCenter() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // computed label for masthead subline
+  // computed label
   const periodLabel = useMemo(() => {
     if (period === 'custom' && start && end) {
       return labelFromRange(new Date(start), new Date(end));
@@ -83,10 +83,10 @@ export default function EmailCenter() {
     let from: Date, to: Date;
     if (which === 'week') ({ from, to } = currentWeekRange());
     else if (which === 'month') ({ from, to } = currentMonthRange());
-    else return; // custom: user picks dates
+    else return; // custom: user picks
 
     const inRange = (iso?: string) => {
-      if (!iso) return true; // if API lacks dates, include all
+      if (!iso) return true;
       const d = new Date(iso);
       return d >= from && d <= to;
     };
@@ -130,10 +130,10 @@ export default function EmailCenter() {
     }
   }
 
-  // date helpers
+  // helpers
   function currentWeekRange() {
     const now = new Date();
-    const day = now.getDay(); // 0 Sun – 6 Sat
+    const day = now.getDay();
     const from = new Date(now); from.setDate(now.getDate() - day);
     const to = new Date(from); to.setDate(from.getDate() + 6);
     from.setHours(0,0,0,0); to.setHours(23,59,59,999);
@@ -167,41 +167,43 @@ export default function EmailCenter() {
         </label>
       </fieldset>
 
-      {/* Subject */}
-      <label className={styles.block}>
-        <span>Subject</span>
-        <input value={subject} onChange={(e) => setSubject(e.target.value)} />
-      </label>
-
-      {/* Intro */}
-      <label className={styles.block}>
-        <span>Custom message</span>
-        <textarea rows={4} value={introMessage} onChange={(e) => setIntroMessage(e.target.value)} placeholder="Short note from Dr. Odera…" />
-      </label>
-
-      {/* Period */}
-      <div className={styles.grid3}>
+      <div className={styles.formControls}>
+        {/* Subject */}
         <label className={styles.block}>
-          <span>Period</span>
-          <select value={period} onChange={(e) => autoSelectByPeriod(e.target.value as Period)}>
-            <option value="week">This week</option>
-            <option value="month">This month</option>
-            <option value="custom">Custom</option>
-          </select>
+          <span>Subject</span>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} />
         </label>
 
-        {period === 'custom' && (
-          <>
-            <label className={styles.block}>
-              <span>From</span>
-              <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-            </label>
-            <label className={styles.block}>
-              <span>To</span>
-              <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-            </label>
-          </>
-        )}
+        {/* Intro */}
+        <label className={styles.block}>
+          <span>Custom message</span>
+          <textarea rows={4} value={introMessage} onChange={(e) => setIntroMessage(e.target.value)} placeholder="Short note from Dr. Odera…" />
+        </label>
+
+        {/* Period */}
+        <div className={styles.grid3}>
+          <label className={styles.block}>
+            <span>Period</span>
+            <select value={period} onChange={(e) => autoSelectByPeriod(e.target.value as Period)}>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+
+          {period === 'custom' && (
+            <>
+              <label className={styles.block}>
+                <span>From</span>
+                <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+              </label>
+              <label className={styles.block}>
+                <span>To</span>
+                <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+              </label>
+            </>
+          )}
+        </div>
       </div>
 
       <p className={styles.periodLabel}>Label: <strong>{periodLabel || '—'}</strong></p>
