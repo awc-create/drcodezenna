@@ -1,9 +1,13 @@
 import { Resend } from 'resend';
 
-const key = process.env.RESEND_API_KEY;
-// Export undefined when missing so imports never throw at module load
-export const resend: Resend | undefined = key ? new Resend(key) : undefined;
+const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
+const RESEND_FROM_ENV = process.env.RESEND_FROM ?? 'Dr. Odera Ezenna <news@drcodezenna.com>';
 
-if (!key) {
-  console.warn('[resend] RESEND_API_KEY not set. Emails will be skipped.');
+export const RESEND_ENABLED = Boolean(RESEND_API_KEY);
+export const RESEND_FROM = RESEND_FROM_ENV;
+
+export const resend = RESEND_ENABLED ? new Resend(RESEND_API_KEY) : undefined;
+
+if (!RESEND_ENABLED) {
+  console.warn('[resend] RESEND_API_KEY not set. Email features are disabled.');
 }
