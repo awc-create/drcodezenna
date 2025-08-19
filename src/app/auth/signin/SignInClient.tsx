@@ -2,12 +2,8 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 
-export default function SignInClient() {
-  const sp = useSearchParams();
-  const callbackUrl = sp.get("callbackUrl") || "/admin";
-
+export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -27,8 +23,11 @@ export default function SignInClient() {
 
     setSubmitting(false);
 
-    if (res?.error) setErr("Invalid email or password");
-    else if (res?.ok) window.location.href = callbackUrl;
+    if (res?.error) {
+      setErr("Invalid email or password");
+    } else if (res?.ok) {
+      window.location.href = callbackUrl;
+    }
   }
 
   return (
