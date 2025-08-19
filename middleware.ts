@@ -9,12 +9,14 @@ export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
   const host = req.headers.get("host") || url.hostname;
 
-  // Redirect /admin on the main domain -> homepage
+  if (host === ADMIN && url.pathname === "/") {
+    return NextResponse.redirect(new URL("/admin", url.origin), { status: 308 });
+  }
+
   if (url.pathname.startsWith("/admin") && (host === MAIN || host === `www.${MAIN}`)) {
     return NextResponse.redirect(new URL(`https://${MAIN}/`), { status: 308 });
   }
 
-  // Gate /admin on the admin subdomain
   if (host === ADMIN && url.pathname.startsWith("/admin")) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
@@ -33,5 +35,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: ["/", "/admin", "/admin/:path*"],
 };
