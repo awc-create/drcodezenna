@@ -71,6 +71,7 @@ COPY --from=builder /app/public ./public
 
 # Include prisma migrations so `prisma migrate deploy` can run in container
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
 RUN npm i -g prisma@6.13.0
 
 USER 1001

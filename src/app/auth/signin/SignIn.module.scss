@@ -24,7 +24,8 @@
   }
 }
 
-form {
+/* ⬇️ scope everything under a local class to satisfy "pure selectors" */
+.form {
   display: grid;
   gap: 1rem;
 

@@ -24,18 +24,16 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
 
     setSubmitting(false);
 
-    if (res?.error) {
-      setErr("Invalid email or password");
-    } else if (res?.ok) {
-      window.location.href = callbackUrl;
-    }
+    if (res?.error) setErr("Invalid email or password");
+    else if (res?.ok) window.location.href = callbackUrl;
   }
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
         <h1>Admin sign in</h1>
-        <form onSubmit={onSubmit}>
+
+        <form onSubmit={onSubmit} className={styles.form}>
           <label>
             Email
             <input
@@ -46,6 +44,7 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
               required
             />
           </label>
+
           <label>
             Password
             <input
@@ -56,7 +55,9 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
               required
             />
           </label>
+
           {err && <p className={styles.error}>{err}</p>}
+
           <button type="submit" disabled={submitting}>
             {submitting ? "Signing in..." : "Sign in"}
           </button>
