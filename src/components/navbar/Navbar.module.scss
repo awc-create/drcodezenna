@@ -1,32 +1,26 @@
 .navbar {
   background: white;
   text-align: center;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   font-family: "Georgia", serif;
   border-bottom: none;
 }
 
 .topBorders {
-  .thickLine {
-    height: 5px;
-    background-color: black;
-    margin-bottom: 2px;
-  }
-
-  .thinLine {
-    height: 2px;
-    background-color: black;
-    margin-bottom: 1rem;
-  }
+  .thickLine { height: 5px; background-color: black; margin-bottom: 2px; }
+  .thinLine  { height: 2px; background-color: black; margin-bottom: 1rem; }
 }
 
+/* ===== Title row ===== */
 .titleRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 2rem;
-  margin-bottom: 0.75rem;
+  padding: 0 1.5rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
+  height: 70px; /* navbar height stays fixed on desktop/tablet */
+  position: relative;
 
   .date,
   .homeLabel {
@@ -36,44 +30,83 @@
   }
 
   .siteTitle {
-    font-size: 2.75rem;
-    font-weight: bold;
-    letter-spacing: 0.1rem;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+
+    img {
+      height: 60px;          /* bigger logo without changing row height */
+      width: auto;
+      object-fit: contain;
+      margin-top: -10px;     /* lift slightly; doesn’t affect row height */
+      display: block;
+    }
+  }
+
+  /* Hidden by default; used on mobile layout */
+  .metaRow {
+    display: none;
   }
 
   @media (max-width: 768px) {
+    /* keep 70px if you want; 60px is a touch tighter */
+    height: 70px;
     padding: 0 1rem;
-    .siteTitle {
-      font-size: 2.25rem;
-    }
-    .date,
-    .homeLabel {
-      font-size: 0.85rem;
-    }
   }
 
   @media (max-width: 480px) {
+    /* Mobile layout:
+       1) Logo centered on its own row
+       2) Date left & Home right below it
+    */
+    height: auto;
     flex-direction: column;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
 
-    .siteTitle {
-      font-size: 1.75rem;
+    /* Hide the desktop positions of date/home labels */
+    > .date,
+    > .homeLabel {
+      display: none;
     }
 
-    .date,
-    .homeLabel {
-      font-size: 0.8rem;
+    .siteTitle {
+      order: 1;
+      height: auto;
+
+      img {
+        height: 36px;       /* tweak here for mobile logo size */
+        margin-top: 0;      /* no negative lift on small screens */
+      }
+    }
+
+    .metaRow {
+      order: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+
+      .date,
+      .homeLabel {
+        display: inline;
+        font-size: 0.9rem;
+        line-height: 1.2;
+      }
     }
   }
 }
 
+/* Divider under title row */
 .navBorder {
   height: 1px;
   background-color: black;
   margin-bottom: 0.75rem;
 }
 
+/* Links row */
 .navLinks {
   display: flex;
   justify-content: center;
@@ -87,9 +120,7 @@
     color: black;
     font-weight: 500;
 
-    &:hover {
-      text-decoration: underline;
-    }
+    &:hover { text-decoration: underline; }
   }
 
   .active {
@@ -105,10 +136,15 @@
   @media (max-width: 480px) {
     gap: 1rem;
     font-size: 0.95rem;
+    padding: 0 1rem 0.6rem;
+
+    /* optional: left-align and allow horizontal scroll if many links */
+    justify-content: flex-start;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
   }
 }
 
-.bottomLine {
-  height: 1px;
-  background-color: black;
-}
+.bottomLine { height: 1px; background-color: black; }

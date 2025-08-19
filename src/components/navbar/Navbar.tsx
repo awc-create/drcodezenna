@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import styles from "./Navbar.module.scss";
 import { NAV_LINKS } from "@/config/menu.config";
 
 export default function Navbar() {
   const pathname = usePathname();
-
   const isAdmin = pathname.startsWith("/admin");
 
   const isLinkActive = (href: string) =>
@@ -25,29 +25,45 @@ export default function Navbar() {
   const getPageLabel = () => {
     const segments = pathname.split("/").filter(Boolean);
     if (segments.length === 0) return "Home";
-
-    const formatted = segments.map(segment => {
+    const formatted = segments.map((segment) => {
       const clean = segment.replace(/-/g, " ");
       return clean.charAt(0).toUpperCase() + clean.slice(1);
     });
-
     return formatted.join(" / ");
   };
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.topBorders}>
-        <div className={styles.thickLine}></div>
-        <div className={styles.thinLine}></div>
+        <div className={styles.thickLine} />
+        <div className={styles.thinLine} />
       </div>
 
       <div className={styles.titleRow}>
+        {/* Desktop/Tablet: date | logo | page label */}
+        {/* Mobile: logo on its own row, then date left / page right */}
         <span className={styles.date}>{getFormattedDate()}</span>
-        <h1 className={styles.siteTitle}>DR. CODE</h1>
+
+        <Link href="/" className={styles.siteTitle} aria-label="Go to homepage">
+          <Image
+            src="/assets/drcode-logo.png"
+            alt="Dr. Code Logo"
+            width={160}
+            height={40}
+            priority
+          />
+        </Link>
+
         <span className={styles.homeLabel}>{getPageLabel()}</span>
+
+        {/* Mobile-only row for date + page label */}
+        <div className={styles.metaRow}>
+          <span className={styles.date}>{getFormattedDate()}</span>
+          <span className={styles.homeLabel}>{getPageLabel()}</span>
+        </div>
       </div>
 
-      <div className={styles.navBorder}></div>
+      <div className={styles.navBorder} />
 
       {!isAdmin && (
         <div className={styles.navLinks}>
@@ -66,7 +82,7 @@ export default function Navbar() {
         </div>
       )}
 
-      <div className={styles.bottomLine}></div>
+      <div className={styles.bottomLine} />
     </nav>
   );
 }

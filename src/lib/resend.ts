@@ -1,9 +1,9 @@
-// src/lib/resend.ts
 import { Resend } from 'resend';
 
-export const RESEND_ENABLED =
-  process.env.RESEND_ENABLED === 'true' && !!process.env.RESEND_API_KEY;
+const key = process.env.RESEND_API_KEY;
+// Export undefined when missing so imports never throw at module load
+export const resend: Resend | undefined = key ? new Resend(key) : undefined;
 
-export const resend = RESEND_ENABLED
-  ? new Resend(process.env.RESEND_API_KEY as string)
-  : null;
+if (!key) {
+  console.warn('[resend] RESEND_API_KEY not set. Emails will be skipped.');
+}
