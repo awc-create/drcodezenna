@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import styles from "./SignIn.module.scss";
 
 export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
@@ -31,34 +32,36 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: "80px auto", fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Admin sign in</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-        <label>
-          <div>Email</div>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="username"
-            required
-          />
-        </label>
-        <label>
-          <div>Password</div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
-        {err && <p style={{ color: "crimson" }}>{err}</p>}
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
-    </main>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h1>Admin sign in</h1>
+        <form onSubmit={onSubmit}>
+          <label>
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </label>
+          <label>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          {err && <p className={styles.error}>{err}</p>}
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
