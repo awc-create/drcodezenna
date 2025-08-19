@@ -25,6 +25,11 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# ✅ Fail fast if src/middleware.ts isn't in the build context
+RUN ls -la src || true \
+ && (test -f src/middleware.ts && echo "✅ Found src/middleware.ts" || (echo "❌ Missing src/middleware.ts"; exit 1))
+
 # Prisma client
 RUN \
   if [ -f yarn.lock ]; then \
@@ -34,6 +39,7 @@ RUN \
   else \
     npm run prisma:generate; \
   fi
+
 # Build Next.js (standalone)
 RUN \
   if [ -f yarn.lock ]; then \
@@ -43,6 +49,9 @@ RUN \
   else \
     npm run build; \
   fi
+
+# 🔎 Print middleware manifest to CI logs
+RUN node -e "const fs=require('fs');const p='.next/server/middleware-manifest.json'; console.log('\\n=== middleware-manifest ==='); console.log(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'(missing)'); console.log('===========================\\n')"
 
 # ---- runner: minimal prod image ----
 FROM node:22-alpine AS runner
@@ -62,7 +71,6 @@ COPY --from=builder /app/public ./public
 
 # Include prisma migrations so `prisma migrate deploy` can run in container
 COPY --from=builder /app/prisma ./prisma
-# Tiny global CLI for migrations
 RUN npm i -g prisma@6.13.0
 
 USER 1001

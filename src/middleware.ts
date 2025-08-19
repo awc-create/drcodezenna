@@ -1,3 +1,4 @@
+// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -5,7 +6,7 @@ import { getToken } from "next-auth/jwt";
 const MAIN = "drcodezenna.com";
 const ADMIN = "admin.drcodezenna.com";
 
-// Prefer x-forwarded-host and strip :port (e.g., admin.drcodezenna.com:443)
+// Prefer x-forwarded-host and strip :port
 function getCleanHost(req: NextRequest): string {
   const xfHost = req.headers.get("x-forwarded-host");
   const host = (xfHost || req.headers.get("host") || "").toLowerCase();
@@ -17,22 +18,22 @@ export async function middleware(req: NextRequest) {
   const pathname = url.pathname;
   const host = getCleanHost(req);
 
-  // Always allow auth + 403 pages on admin host to avoid loops
+  // Allow sign-in and 403 on admin host to avoid loops
   if (host === ADMIN && (pathname.startsWith("/auth/signin") || pathname === "/403")) {
     return NextResponse.next();
   }
 
-  // Redirect admin subdomain root -> /admin
+  // admin.drcodezenna.com → /admin
   if (host === ADMIN && pathname === "/") {
     return NextResponse.redirect(new URL("/admin", url.origin), { status: 308 });
   }
 
-  // Block /admin on the main domain -> redirect to homepage
+  // Block /admin on MAIN → send home
   if ((host === MAIN || host === `www.${MAIN}`) && pathname.startsWith("/admin")) {
     return NextResponse.redirect(new URL(`https://${MAIN}/`), { status: 308 });
   }
 
-  // Gate /admin on admin subdomain
+  // Gate /admin on ADMIN
   if (host === ADMIN && pathname.startsWith("/admin")) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
@@ -50,7 +51,6 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Include root + admin paths so the above rules run
 export const config = {
   matcher: ["/", "/admin", "/admin/:path*", "/auth/signin", "/403"],
 };
