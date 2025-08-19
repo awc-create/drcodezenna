@@ -17,13 +17,16 @@ export default function SignInClient() {
     e.preventDefault();
     setErr(null);
     setSubmitting(true);
+
     const res = await signIn("credentials", {
       redirect: false,
       email,
       password,
       callbackUrl,
     });
+
     setSubmitting(false);
+
     if (res?.error) setErr("Invalid email or password");
     else if (res?.ok) window.location.href = callbackUrl;
   }
@@ -37,7 +40,7 @@ export default function SignInClient() {
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"
             required
           />
@@ -47,7 +50,7 @@ export default function SignInClient() {
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
           />

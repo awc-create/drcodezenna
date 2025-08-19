@@ -1,4 +1,3 @@
-// src/app/api/send-email/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWeeklyDigestEmail } from '@/lib/email/sendWeeklyDigestEmail';
@@ -26,11 +25,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Select at least one blog or teaching item' }, { status: 400 });
     }
 
-    // Build audience: only subscribed + at least one matching interest
+    // Audience: opted-in + has at least one of the selected interests
     const subs = await prisma.subscriber.findMany({
       where: {
         unsubscribedAt: null,
-        interests: { hasSome: interests }, // Postgres String[] filter
+        interests: { hasSome: interests },
       },
       select: { email: true },
     });
@@ -45,7 +44,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No subscribers match the selected audience' }, { status: 400 });
     }
 
-    // Fetch selected content for titles/links
+    // Content lookups
     const [blogs, teachings] = await Promise.all([
       blogIds.length
         ? prisma.blogPost.findMany({ where: { id: { in: blogIds } }, select: { id: true, title: true } })
@@ -59,7 +58,7 @@ export async function POST(req: Request) {
     const blogItems = blogs.map(b => ({ title: b.title, url: `${site}/blog/${b.id}` }));
     const teachingItems = teachings.map(t => ({ title: t.title, url: `${site}/teaching/${t.id}` }));
 
-    // If email disabled (no RESEND key), return a dry-run response
+    // If email disabled, return a dry-run payload
     if (!RESEND_ENABLED) {
       return NextResponse.json({
         ok: true,
@@ -76,7 +75,6 @@ export async function POST(req: Request) {
       periodLabel,
       blogPosts: blogItems,
       teachingPosts: teachingItems,
-      // For a bulk digest, use the page with form; per-recipient tokens would require per-user sends.
       unsubscribeUrl: `${site}/unsubscribe`,
     });
 

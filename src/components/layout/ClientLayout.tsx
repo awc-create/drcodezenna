@@ -14,7 +14,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main style={{ paddingTop: isHome ? 0 : "var(--navbar-height)" }}>
         {children}
       </main>
-      <hr className="newspaper-divider" />
       <Footer />
     </>
   );

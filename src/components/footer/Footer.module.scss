@@ -35,3 +35,26 @@
   text-decoration: underline;
   font-size: 0.85rem;
 }
+
+.pageHint {
+  font-style: italic;
+  cursor: pointer;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* space between text and arrow */
+}
+
+.turnText { display: inline; }
+.downArrow {
+  display: none;      /* hidden on desktop */
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* On mobile: hide text, show only the down arrow */
+@media (max-width: 640px) {
+  .turnText { display: none; }
+  .downArrow { display: inline; }
+}

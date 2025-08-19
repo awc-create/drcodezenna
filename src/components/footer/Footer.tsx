@@ -25,8 +25,18 @@ export default function Footer() {
         </span>
       ) : (
         <>
-          <span className={styles.pageHint} onClick={() => router.push(nextPage)}>
-            Turn the page
+          <span
+            className={styles.pageHint}
+            onClick={() => router.push(nextPage)}
+            role="button"
+            tabIndex={0}
+            aria-label="Next page"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') router.push(nextPage);
+            }}
+          >
+            <span className={styles.turnText}>Turn the page</span>
+            <span className={styles.downArrow} aria-hidden>↓</span>
           </span>
 
           <nav className={styles.links}>
