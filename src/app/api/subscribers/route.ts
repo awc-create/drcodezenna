@@ -1,16 +1,12 @@
+// src/app/api/subscribers/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { randomBytes } from 'crypto';
 
-export const runtime = 'nodejs'; // ✅ Prisma needs Node runtime (not Edge)
+export const runtime = 'nodejs';
 
 type Interest = 'Blog' | 'Teaching';
-
-type SubscriberPostBody = {
-  email?: string;
-  name?: string;
-  interests?: string[] | string;
-  location?: string | null;
-};
+type SubscriberPostBody = { email?: string; name?: string; interests?: string[] | string; location?: string | null; };
 
 function bad(status: number, error: string) {
   return NextResponse.json({ error }, { status });
@@ -25,41 +21,43 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  const debug = url.searchParams.get('debug') === '1'; // add ?debug=1 to see more logs
+  const debug = url.searchParams.get('debug') === '1';
 
   try {
     const body = (await req.json()) as SubscriberPostBody;
     if (debug) console.log('[subscribers:POST] raw body:', body);
 
-    // 1) Validate
     const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
     if (!email) return bad(400, 'Email is required');
 
     const name = (body?.name ?? 'Anonymous').toString().trim();
 
     const normalizedInterests =
-      Array.isArray(body?.interests)
-        ? body!.interests
-        : typeof body?.interests === 'string'
-          ? body!.interests.split(',').map(t => t.trim())
-          : [];
+      Array.isArray(body?.interests) ? body!.interests
+      : typeof body?.interests === 'string' ? body!.interests.split(',').map(t => t.trim())
+      : [];
 
     if (!normalizedInterests.length) return bad(400, 'Select at least one interest');
 
     const interests = normalizedInterests.filter(Boolean) as Interest[];
     const location = (body?.location ?? '').toString();
 
-    // 2) Write
+    const unsubscribeToken = randomBytes(24).toString('hex');
+
     const sub = await prisma.subscriber.create({
-      data: { email, name, interests, location },
+      data: { email, name, interests, location, unsubscribeToken },
     });
 
-    // 3) Send welcome email, but never fail the subscription on email problems
+    // Send welcome email (tokenized unsubscribe). Never fail the subscription if email fails.
     try {
       const { resend } = await import('@/lib/resend');
       if (resend) {
         const { sendWelcomeEmail } = await import('@/lib/email/sendWelcomeEmail');
-        await sendWelcomeEmail({ to: sub.email, name: sub.name });
+        await sendWelcomeEmail({
+          to: sub.email,
+          name: sub.name,
+          unsubscribeToken: sub.unsubscribeToken ?? undefined,
+        });
       } else if (debug) {
         console.warn('[subscribers:POST] Skipping email: RESEND_API_KEY missing.');
       }
@@ -69,7 +67,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(sub, { status: 201 });
   } catch (e: any) {
-    // Prisma duplicate email
     if (e?.code === 'P2002' || /Unique constraint/i.test(String(e?.message))) {
       return bad(409, 'This email is already subscribed.');
     }

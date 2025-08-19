@@ -81,4 +81,7 @@ model Subscriber {
   interests    String[] // array of interest tags
   location     String? // optional
   subscribedAt DateTime @default(now())
+
+  unsubscribeToken String?  @unique
+  unsubscribedAt    DateTime?
 }
