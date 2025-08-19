@@ -39,6 +39,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "bcryptjs": "^3.0.2",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
     "postcss": "^8.5.6",

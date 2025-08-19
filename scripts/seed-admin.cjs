@@ -1,5 +1,3 @@
-// scripts/seed-admin.cjs
-require("dotenv/config");
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
@@ -9,7 +7,8 @@ async function main() {
   const email = (process.env.SEED_ADMIN_EMAIL || "admin@example.com").toLowerCase().trim();
   const password = process.env.SEED_ADMIN_PASSWORD || "ChangeMeNow!";
   if (!email || !password) {
-    console.error("Missing SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD"); process.exit(1);
+    console.error("Missing SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD");
+    process.exit(1);
   }
   const passwordHash = await bcrypt.hash(password, 12);
 
