@@ -1,30 +1,39 @@
+/* Fast BookFlip styles: mobile responsiveness, GPU/perf hints, smoother neighbors */
+
+/* Container */
 .bookContainer {
   padding: 2rem 1rem;
   display: flex;
   justify-content: center;
   position: relative;
   overscroll-behavior: contain;
+  contain: layout paint; /* isolate for perf */
 }
 
+/* Flipbook root */
+.book {
+  position: relative;
+  box-shadow: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+  cursor: grab;
+  transform: translateZ(0); /* GPU nudge */
+  backface-visibility: hidden;
+}
+.book:active { cursor: grabbing; }
+
+/* Overlay anchor */
 .bookWrap {
   position: relative;
   display: inline-block;
   overflow: visible;
 }
 
-.book {
-  position: relative;
-  box-shadow: none;
-  touch-action: pan-y pinch-zoom;
-  user-select: none;
-  -webkit-user-select: none;
-  will-change: transform;
-  cursor: grab;
-}
-.book:active { cursor: grabbing; }
-
+/* ---------- Skeleton while not in view ---------- */
 .bookSkeleton {
-  width: 100%;
+  width: min(100%, 1000px);
   height: 520px;
   border-radius: 12px;
   background:
@@ -38,58 +47,71 @@
   100% { background-position: 0 0; }
 }
 
+/* ---------- Page styles ---------- */
 .page {
   background: #fff;
-  padding: 1.6rem;
-  border: 1px solid #ccc;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   height: 100%;
   will-change: transform;
-  backface-visibility: hidden;
+  contain: content; /* isolate expensive paints */
   transform: translateZ(0);
-  contain: layout paint size;
+  backface-visibility: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 
   .imageWrapper { width: 100%; margin-bottom: 1rem; }
 
   .image {
     height: 200px; width: 100%;
     object-fit: cover; background: #dcdcdc;
-    border: 1px solid #ccc;
+    border: 1px solid #d9d9d9;
     pointer-events: none;
     user-select: none; -webkit-user-select: none;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
-  .title  { font-size: clamp(1.1rem, 3.4vw, 1.4rem); font-weight: 700; line-height: 1.3; margin-bottom: .5rem; }
-  .author { font-weight: 600; font-size: clamp(.9rem, 2.8vw, 1rem); color: #444; margin-bottom: 1rem; }
-  .summary{ font-size: clamp(.95rem, 2.8vw, 1rem); line-height: 1.6; color: #333; flex-grow: 1; }
+  .title  { font-size: 1.4rem; font-weight: 700; line-height: 1.3; margin-bottom: .5rem; }
+  .author { font-weight: 600; font-size: 1rem; color: #444; margin-bottom: 1rem; }
+  .summary{ font-size: 1rem; line-height: 1.6; color: #333; flex-grow: 1; }
 
   .readMore {
-    appearance: none; background: none; border: none; padding: 0; margin-top: 1.25rem;
+    appearance: none; background: none; border: none; padding: 0; margin-top: 1.5rem;
     font-weight: 600; font-size: 1rem; display: inline-flex; align-items: center;
     color: #003087; cursor: pointer; position: relative;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation;
     .arrow { display: inline-block; margin-left: .25rem; transition: transform .3s ease; }
   }
-  .readMore:hover .arrow { transform: translateX(2px); }
+
+  &[data-lite="1"] {
+    /* cheaper placeholder paint for far pages */
+    border-style: dashed;
+    .summary, .author, .readMore { opacity: 0.6; }
+  }
 }
 
+/* Lightweight placeholder inside far pages */
 .pagePlaceholder {
-  height: 220px;
+  height: 250px;
   width: 100%;
-  border: 1px solid #eaeaea;
-  background: #f5f5f5;
+  border: 1px dashed #eaeaea;
+  background: #f8f8f8;
   margin-bottom: 1rem;
 }
 
 .divider {
   border: none;
-  border-top: 1px solid #e5e5e5;
-  margin: .6rem 0 1rem;
+  border-top: 1px solid #ececec;
+  margin: .75rem 0 1rem;
 }
 
+/* ---------- Overlays (gated until book is ready) ---------- */
 .edgeHints,
 .cornerPeel {
   opacity: 0;
@@ -109,6 +131,7 @@
   z-index: 55;
 }
 
+/* Label: center on single page; center of RIGHT page on spread */
 .edgeLabel {
   position: absolute;
   left: 50%;
@@ -126,6 +149,7 @@
 }
 .bookWrap[data-spread="1"] .edgeLabel { left: 75%; transform: translateX(-50%); }
 
+/* Static corner peel (no animation) */
 .cornerPeel {
   position: absolute;
   right: 0;
@@ -154,9 +178,23 @@
   bottom: 0;
   width: 86px;
   height: 86px;
+  pointer-events: none;
   background: radial-gradient(70px 70px at 100% 100%,
     rgba(0,0,0,0.18), rgba(0,0,0,0) 65%);
   filter: blur(1px);
   transform: translate(4px, 4px);
   opacity: .55;
+}
+/* Hide peel after first interaction/flip */
+.cornerPeel[data-active="0"] { opacity: 0; visibility: hidden; }
+
+/* ---------- Mobile tweaks ---------- */
+@media (max-width: 767px) {
+  .bookSkeleton { height: 500px; }
+  .page {
+    padding: 1.25rem;
+    .image { height: 180px; }
+    .title { font-size: 1.25rem; }
+  }
+  .cornerPeel { width: 72px; height: 72px; }
 }

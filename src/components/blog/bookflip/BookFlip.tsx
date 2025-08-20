@@ -1,15 +1,27 @@
 'use client';
 
+/**
+ * Fast BookFlip v2:
+ * - dynamic() import + lazy mount on visible
+ * - responsive book width via ResizeObserver (no reflow churn)
+ * - "snap-to-flip": any tiny drag forces next/prev
+ * - swipeDistance=1 for built-in tiny swipe acceptance
+ * - windowed rendering expands while flipping (reduces pop-in)
+ * - eager-load nearby images
+ * - GPU/perf CSS hints (translateZ, contain, backface-visibility)
+ */
+
 import * as React from 'react';
 import dynamic from 'next/dynamic';
 import styles from './BookFlip.module.scss';
 import Image from 'next/image';
 import type { BlogPost } from '@/types';
 
+// Client-only components
 const ArticleLightbox = dynamic(() => import('@/components/blog/article/ArticleLightbox'), {
   ssr: false,
 });
-const FlipBookDyn = dynamic(() => import('react-pageflip'), { ssr: false });
+const FlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
 
 export interface BookFlipHandle {
   flipToPage: (index: number) => void;
@@ -34,26 +46,43 @@ interface FlipBookRef {
   };
 }
 
+type FlipProps = Omit<React.ComponentProps<typeof FlipBook>, 'children' | 'ref'>;
+
 const AUTO_INTERVAL_MS = 6000;
 const MANUAL_PAUSE_MS = 5000;
 const JUST_FLIPPED_WINDOW = 250;
-const NEAR_WINDOW = 1;
+
+// Base window sizes; we expand this while flipping to avoid pop-in
+const NEAR_WINDOW_MOBILE = 1;
+const NEAR_WINDOW_DESKTOP = 2;
 
 const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
   ({ pages = [], stopAutoflip, onReadMore, isMobile = false }, ref) => {
     const rootRef = React.useRef<HTMLDivElement | null>(null);
     const flipRef = React.useRef<FlipBookRef | null>(null);
 
+    // Viewport-aware mount
     const [inView, setInView] = React.useState(false);
+
+    // Book API ready
     const [bookReady, setBookReady] = React.useState(false);
+
+    // Static peel until first interaction/flip
     const [peelActive, setPeelActive] = React.useState(true);
+
+    // Selected article for built-in lightbox
     const [selectedArticle, setSelectedArticle] = React.useState<BlogPost | null>(null);
+
+    // Current logical page index
     const [currentIndex, setCurrentIndex] = React.useState(0);
-    const [isDragging, setIsDragging] = React.useState(false);
 
-    const touchStartX = React.useRef<number | null>(null);
-    const touchStartT = React.useRef<number | null>(null);
+    // Are we actively flipping? (to widen render window & avoid “pop-in”)
+    const [isFlipping, setIsFlipping] = React.useState(false);
 
+    // Responsive book width (follows container)
+    const [bookWidth, setBookWidth] = React.useState<number>(isMobile ? 360 : 500);
+
+    // Lazy mount when visible
     React.useEffect(() => {
       const el = rootRef.current;
       if (!el) return;
@@ -70,6 +99,23 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       return () => io.disconnect();
     }, []);
 
+    // Observe container width to set the book width responsively
+    React.useEffect(() => {
+      const el = rootRef.current;
+      if (!el) return;
+      const ro = new ResizeObserver((entries) => {
+        const cr = entries[0]?.contentRect;
+        if (!cr) return;
+        // Cap the mobile width a bit so images remain crisp
+        const target = isMobile ? Math.min(Math.max(320, cr.width - 16), 480) : 500;
+        if (Math.abs(target - bookWidth) > 0.5) setBookWidth(target);
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isMobile]);
+
+    // Mark ready once FlipBook exposes its API
     React.useEffect(() => {
       if (!inView) return;
       let raf = 0;
@@ -86,9 +132,11 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       return () => cancelAnimationFrame(raf);
     }, [inView]);
 
+    // Imperative controls
     React.useImperativeHandle(ref, () => ({
       flipToPage: (index: number) => {
-        flipRef.current?.pageFlip?.().flip?.(index);
+        const api = flipRef.current?.pageFlip?.();
+        api?.flip?.(index);
       },
       flipPrev: () => {
         clearAuto();
@@ -100,6 +148,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       },
     }));
 
+    // Auto-flip scheduler
     const timerRef = React.useRef<number | null>(null);
     const isAutoRef = React.useRef(false);
     const justFlippedRef = React.useRef(false);
@@ -132,13 +181,16 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       return clearAuto;
     }, [inView, stopAutoflip, pages.length]);
 
+    // Flip callbacks
     const handleOnFlip = () => {
       if (peelActive) setPeelActive(false);
       const api = flipRef.current?.pageFlip?.();
       if (api) setCurrentIndex(api.getCurrentPageIndex?.() ?? 0);
 
       justFlippedRef.current = true;
-      setTimeout(() => { justFlippedRef.current = false; }, JUST_FLIPPED_WINDOW);
+      setTimeout(() => {
+        justFlippedRef.current = false;
+      }, JUST_FLIPPED_WINDOW);
 
       const wasAuto = isAutoRef.current;
       isAutoRef.current = false;
@@ -146,96 +198,124 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       scheduleAuto(wasAuto ? AUTO_INTERVAL_MS : MANUAL_PAUSE_MS);
     };
 
-    const handleReadMore = (article: BlogPost) => {
-      onReadMore ? onReadMore(article) : setSelectedArticle(article);
-    };
+    // “Snap to flip” fallback — any tiny drag commits next/prev
+    const dragStartX = React.useRef<number | null>(null);
+    const dragDelta = React.useRef(0);
 
-    const handlePointerDown = () => {
+    const handlePointerDown = (e: React.PointerEvent) => {
       if (peelActive) setPeelActive(false);
       clearAuto();
-      setIsDragging(true);
+      dragStartX.current = e.clientX;
+      dragDelta.current = 0;
+      setIsFlipping(true); // widen render window immediately
+    };
+    const handlePointerMove = (e: React.PointerEvent) => {
+      if (dragStartX.current != null) {
+        dragDelta.current = e.clientX - dragStartX.current;
+      }
     };
     const handlePointerUp = () => {
-      setIsDragging(false);
-      if (!justFlippedRef.current) scheduleAuto(AUTO_INTERVAL_MS);
+      if (!justFlippedRef.current) {
+        const delta = dragDelta.current;
+        const threshold = 2; // tiny nudge is enough
+        if (Math.abs(delta) >= threshold) {
+          const api = flipRef.current?.pageFlip?.();
+          if (api) {
+            if (delta < 0) api.flipNext?.();
+            else api.flipPrev?.();
+          }
+        }
+      }
+      dragStartX.current = null;
+      dragDelta.current = 0;
+      setIsFlipping(false);
+      scheduleAuto(AUTO_INTERVAL_MS);
     };
 
-    React.useEffect(() => {
-      return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, []);
-
-    const onTouchStart = (e: React.TouchEvent) => {
-      if (!isMobile) return;
-      const t = e.changedTouches[0];
-      touchStartX.current = t.clientX;
-      touchStartT.current = performance.now();
-      setIsDragging(true);
-    };
-
-    const onTouchEnd = (e: React.TouchEvent) => {
-      if (!isMobile) return;
-      const t = e.changedTouches[0];
-      const sx = touchStartX.current;
-      const st = touchStartT.current;
-      touchStartX.current = null;
-      touchStartT.current = null;
-
-      setIsDragging(false);
-
-      if (sx == null || st == null) return;
-
-      const dx = t.clientX - sx;
-      const dt = Math.max(1, performance.now() - st);
-      const v = dx / dt;
-
-      const QUICK = Math.abs(v) > 0.6;
-      const SHORT = Math.abs(dx) > 30;
-
-      if (QUICK || SHORT) {
-        clearAuto();
-        if (dx < 0) flipRef.current?.pageFlip?.().flipNext?.();
-        else flipRef.current?.pageFlip?.().flipPrev?.();
-        scheduleAuto(MANUAL_PAUSE_MS);
+    // If library exposes state changes, use them to widen window while folding
+    const handleChangeState = (e: any) => {
+      const s = e?.data ?? e; // some builds emit strings
+      if (s === 'user_fold' || s === 'animating' || s === 'flipping') {
+        setIsFlipping(true);
+      }
+      if (s === 'fold_ended' || s === 'idle' || s === 'finished') {
+        setIsFlipping(false);
       }
     };
 
-    const flipProps = {
-      size: isMobile ? 'stretch' : 'fixed',
-      width: isMobile ? 380 : 500,
-      height: isMobile ? 520 : 500,
-      minWidth: 300,
+    React.useEffect(() => {
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }, []);
+
+    // Preload nearby images (helps avoid pop-in)
+    React.useEffect(() => {
+      const idxs: number[] = [];
+      const base = isMobile ? NEAR_WINDOW_MOBILE : NEAR_WINDOW_DESKTOP;
+      const extra = isFlipping || justFlippedRef.current ? 2 : 0;
+      const span = base + extra + 1;
+      for (let d = 0; d <= span; d++) {
+        if (currentIndex + d < pages.length) idxs.push(currentIndex + d);
+        if (currentIndex - d >= 0) idxs.push(currentIndex - d);
+      }
+      const srcs = idxs
+        .map((i) => pages[i]?.image)
+        .filter((s): s is string => typeof s === 'string' && s.length > 0);
+      srcs.forEach((src) => {
+        const img = new window.Image();
+        img.src = src;
+      });
+    }, [currentIndex, isFlipping, isMobile, pages]);
+
+    // Compute window size (wider while flipping)
+    const nearWindow = React.useMemo(() => {
+      const base = isMobile ? NEAR_WINDOW_MOBILE : NEAR_WINDOW_DESKTOP;
+      return base + (isFlipping || justFlippedRef.current ? 2 : 0);
+    }, [isMobile, isFlipping]);
+
+    const isNear = (i: number) => Math.abs(i - currentIndex) <= nearWindow;
+
+    // FlipBook props (tuned)
+    const flipProps: FlipProps = {
+      width: bookWidth,                 // responsive to container
+      height: 500,
+      minWidth: 320,
       maxWidth: 1000,
-      minHeight: 420,
+      minHeight: 400,
       maxHeight: 1536,
       usePortrait: isMobile,
       showCover: false,
-      autoSize: true,
+      size: 'fixed',
+      autoSize: false,                  // avoid internal re-measuring
+      swipeDistance: 1,                 // accept tiny drags
       drawShadow: false,
-      maxShadowOpacity: 0,
-      swipeDistance: isMobile ? 1 : 6,
-      showPageCorners: !!isMobile,
+      flippingTime: 780,                // a touch snappier
+      showPageCorners: false,
+      disableFlipByClick: false,
       clickEventForward: true,
       useMouseEvents: true,
-      disableFlipByClick: true,
-      flippingTime: 800,
-      mobileScrollSupport: true,
+      mobileScrollSupport: false,
       onFlip: handleOnFlip,
+      onChangeState: handleChangeState as any, // may be ignored by some builds
       className: styles.book,
       style: { margin: '0 auto' },
       startPage: 0,
       startZIndex: 0,
-    } as const;
+      maxShadowOpacity: 0,
+    };
 
-    const NEAR_WHILE_DRAG = isMobile ? 3 : 2;
-    const windowRadius = isDragging ? NEAR_WHILE_DRAG : NEAR_WINDOW;
-    const isNear = (i: number) => Math.abs(i - currentIndex) <= windowRadius;
+    const handleReadMore = (article: BlogPost) => {
+      onReadMore ? onReadMore(article) : setSelectedArticle(article);
+    };
 
+    // Render a single page; eager-load near pages to reduce pop-in
     const renderPage = (page: BlogPost, i: number) => {
-      const eager = i < 2 || (isDragging && Math.abs(i - currentIndex) <= (windowRadius + 1));
-
+      const eager = isNear(i); // anything in the window gets priority
       if (!isNear(i)) {
+        // Lightweight placeholder for far pages
         return (
-          <div key={i} className={styles.page}>
+          <div key={i} className={styles.page} data-lite="1">
             <div className={styles.pagePlaceholder} />
             <h2 className={styles.title}>{page.title}</h2>
           </div>
@@ -255,10 +335,12 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
               sizes="(max-width: 768px) 360px, 500px"
             />
           </div>
+
           <h2 className={styles.title}>{page.title}</h2>
           <hr className={styles.divider} />
-          {page.author && <p className={styles.author}>By {page.author}</p>}
-          {page.summary && <p className={styles.summary}>{page.summary}</p>}
+          <p className={styles.author}>By {page.author}</p>
+          <p className={styles.summary}>{page.summary}</p>
+
           <button
             type="button"
             className={styles.readMore}
@@ -280,52 +362,29 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
         ref={rootRef}
         className={styles.bookContainer}
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
       >
         <div
           className={styles.bookWrap}
           data-ready={bookReady ? '1' : '0'}
           data-spread={isMobile ? '0' : '1'}
         >
+          {/* Skeleton until it scrolls into view */}
           {!inView && <div className={styles.bookSkeleton} aria-hidden="true" />}
 
           {inView && (
-            <FlipBookDyn {...(flipProps as any)} ref={flipRef as any}>
+            <FlipBook {...flipProps} ref={flipRef as any}>
               {pages.map(renderPage)}
-            </FlipBookDyn>
+            </FlipBook>
           )}
 
-          {inView && (
-            <>
-              <div
-                className={styles.hotzoneLeft}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  clearAuto();
-                  flipRef.current?.pageFlip?.().flipPrev?.();
-                  scheduleAuto(MANUAL_PAUSE_MS);
-                }}
-                aria-hidden="true"
-              />
-              <div
-                className={styles.hotzoneRight}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  clearAuto();
-                  flipRef.current?.pageFlip?.().flipNext?.();
-                  scheduleAuto(MANUAL_PAUSE_MS);
-                }}
-                aria-hidden="true"
-              />
-            </>
-          )}
-
+          {/* Label (only after book is ready) */}
           <div className={styles.edgeHints} aria-hidden="true">
             <div className={styles.edgeLabel}>Drag to flip</div>
           </div>
 
+          {/* Static corner peel (hidden after first interaction/flip) */}
           <div
             className={styles.cornerPeel}
             data-active={peelActive ? '1' : '0'}
