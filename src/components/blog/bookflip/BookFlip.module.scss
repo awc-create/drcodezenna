@@ -1,5 +1,5 @@
 /* Fast BookFlip styles: skeleton, windowed placeholders, gated overlays */
-/* Includes 5% mobile scale + edge hotzones + smoother touch */
+/* Includes 5% mobile scale + edge hotzones + smoother touch + drag perf hints */
 
 /* Container */
 .bookContainer {
@@ -67,6 +67,11 @@
   box-sizing: border-box;
   height: 100%;
   will-change: transform;
+
+  /* Perf hints so half-turned pages stay crisp */
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: layout paint size;
 
   .imageWrapper { width: 100%; margin-bottom: 1rem; }
 

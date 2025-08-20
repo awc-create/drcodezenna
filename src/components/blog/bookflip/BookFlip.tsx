@@ -2,11 +2,11 @@
 
 /**
  * Fast BookFlip (mobile-tuned):
- * - dynamic() import for react-pageflip (no SSR, smaller initial JS)
+ * - dynamic() import for react-pageflip (no SSR)
  * - mount-on-visible (IntersectionObserver)
  * - skeleton placeholder while loading
- * - windowed page content (current ± 1)
- * - eager images on first spread, lazy after
+ * - windowed page content (current ± windowRadius)
+ * - eager images on first spread, lazy after (more eager while dragging)
  * - static corner peel + "Drag to flip" label (gated until book ready)
  * - mobile tweaks: stretch sizing, lower swipeDistance, edge hotzones, flick fallback
  * - 5% smaller on phone (scale wrapper)
@@ -54,7 +54,7 @@ const AUTO_INTERVAL_MS = 6000;
 const MANUAL_PAUSE_MS = 5000;
 const JUST_FLIPPED_WINDOW = 250;
 
-// How many pages around the current one to render fully
+// Base neighbor radius when idle, and larger while dragging.
 const NEAR_WINDOW = 1;
 
 const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
@@ -76,6 +76,9 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
 
     // Track current page for windowed rendering
     const [currentIndex, setCurrentIndex] = React.useState(0);
+
+    // Drag state (expands render window so pages are visible mid-swipe)
+    const [isDragging, setIsDragging] = React.useState(false);
 
     // Flick detection
     const touchStartX = React.useRef<number | null>(null);
@@ -186,8 +189,10 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
     const handlePointerDown = () => {
       if (peelActive) setPeelActive(false);
       clearAuto();
+      setIsDragging(true);
     };
     const handlePointerUp = () => {
+      setIsDragging(false);
       if (!justFlippedRef.current) scheduleAuto(AUTO_INTERVAL_MS);
     };
 
@@ -201,6 +206,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       const t = e.changedTouches[0];
       touchStartX.current = t.clientX;
       touchStartT.current = performance.now();
+      setIsDragging(true);
     };
 
     const onTouchEnd = (e: React.TouchEvent) => {
@@ -210,6 +216,10 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       const st = touchStartT.current;
       touchStartX.current = null;
       touchStartT.current = null;
+
+      // ensure we end dragging even if we bail
+      setIsDragging(false);
+
       if (sx == null || st == null) return;
 
       const dx = t.clientX - sx;
@@ -228,7 +238,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       }
     };
 
-    // Fixed sizes minimize re-measure work inside react-pageflip; on mobile we let it stretch
+    // Responsive + easier gestures
     const flipProps = {
       // Responsive: stretch to container width on mobile
       size: isMobile ? 'stretch' : 'fixed',
@@ -247,7 +257,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       maxShadowOpacity: 0,
 
       // Easier gestures:
-      swipeDistance: isMobile ? 2 : 6,   // ↓ easier to “commit” flip on phone
+      swipeDistance: isMobile ? 1 : 6,   // super-easy to “commit” flip on phone
       showPageCorners: !!isMobile,       // bigger hit area on mobile
       clickEventForward: true,
       useMouseEvents: true,
@@ -262,11 +272,15 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       startZIndex: 0,
     } as const;
 
-    // Window the page content (current ± NEAR_WINDOW)
-    const isNear = (i: number) => Math.abs(i - currentIndex) <= NEAR_WINDOW;
+    // Window the page content (current ± windowRadius)
+    const NEAR_WHILE_DRAG = isMobile ? 3 : 2;
+    const windowRadius = isDragging ? NEAR_WHILE_DRAG : NEAR_WINDOW;
+    const isNear = (i: number) => Math.abs(i - currentIndex) <= windowRadius;
 
     const renderPage = (page: BlogPost, i: number) => {
-      const eager = i < 2; // eager-load first spread’s images
+      // eager-load first spread AND neighbors while dragging
+      const eager = i < 2 || (isDragging && Math.abs(i - currentIndex) <= (windowRadius + 1));
+
       if (!isNear(i)) {
         // Lightweight placeholder for far pages
         return (
@@ -322,10 +336,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
         onTouchEnd={onTouchEnd}
       >
         {/* scale wrapper: makes the whole book 5% smaller on phones (and hotzones with it) */}
-        <div
-          className={styles.scaleWrap}
-          data-mobile={isMobile ? '1' : '0'}
-        >
+        <div className={styles.scaleWrap} data-mobile={isMobile ? '1' : '0'}>
           <div
             className={styles.bookWrap}
             data-ready={bookReady ? '1' : '0'}
