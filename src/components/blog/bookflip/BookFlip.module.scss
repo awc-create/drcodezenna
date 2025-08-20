@@ -1,7 +1,3 @@
-/* Fast BookFlip styles: skeleton, windowed placeholders, gated overlays */
-/* Includes 5% mobile scale + edge hotzones + smoother touch + drag perf hints */
-
-/* Container */
 .bookContainer {
   padding: 2rem 1rem;
   display: flex;
@@ -10,18 +6,15 @@
   overscroll-behavior: contain;
 }
 
-/* Overlay anchor */
 .bookWrap {
   position: relative;
   display: inline-block;
   overflow: visible;
 }
 
-/* Flipbook root */
 .book {
   position: relative;
   box-shadow: none;
-  /* Allow vertical scroll; pageflip still captures horizontal drags */
   touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
@@ -30,7 +23,6 @@
 }
 .book:active { cursor: grabbing; }
 
-/* ---------- Skeleton while not in view ---------- */
 .bookSkeleton {
   width: 100%;
   height: 520px;
@@ -46,7 +38,6 @@
   100% { background-position: 0 0; }
 }
 
-/* ---------- Page styles ---------- */
 .page {
   background: #fff;
   padding: 1.6rem;
@@ -57,8 +48,6 @@
   box-sizing: border-box;
   height: 100%;
   will-change: transform;
-
-  /* Perf hints so half-turned pages stay crisp */
   backface-visibility: hidden;
   transform: translateZ(0);
   contain: layout paint size;
@@ -87,7 +76,6 @@
   .readMore:hover .arrow { transform: translateX(2px); }
 }
 
-/* Lightweight placeholder inside far pages */
 .pagePlaceholder {
   height: 220px;
   width: 100%;
@@ -102,7 +90,6 @@
   margin: .6rem 0 1rem;
 }
 
-/* ---------- Overlays (gated until book is ready) ---------- */
 .edgeHints,
 .cornerPeel {
   opacity: 0;
@@ -118,11 +105,10 @@
 .edgeHints {
   position: absolute;
   inset: 0;
-  pointer-events: none; /* don’t snag touches */
+  pointer-events: none;
   z-index: 55;
 }
 
-/* Label: center on single page; center of RIGHT page on spread */
 .edgeLabel {
   position: absolute;
   left: 50%;
@@ -140,7 +126,6 @@
 }
 .bookWrap[data-spread="1"] .edgeLabel { left: 75%; transform: translateX(-50%); }
 
-/* Static corner peel (no animation) */
 .cornerPeel {
   position: absolute;
   right: 0;
@@ -174,28 +159,4 @@
   filter: blur(1px);
   transform: translate(4px, 4px);
   opacity: .55;
-}
-/* Hide peel after first interaction/flip */
-.cornerPeel[data-active="0"] { opacity: 0; visibility: hidden; }
-
-/* ---------- Edge hotzones (tap to flip) ---------- */
-.hotzoneLeft,
-.hotzoneRight {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 26%;
-  z-index: 70;        /* above pages, below overlays */
-  pointer-events: auto;
-  outline: none;
-
-  @media (min-width: 768px) {
-    display: none;    // desktop uses native clicks/drags
-  }
-}
-.hotzoneLeft  { left: 0; }
-.hotzoneRight { right: 0; }
-
-@media (max-width: 767px) {
-  .cornerPeel { width: 72px; height: 72px; }
 }
