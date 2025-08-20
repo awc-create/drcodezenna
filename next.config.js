@@ -4,12 +4,17 @@ const nextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
   images: {
-    // If you keep unoptimized, this is ignored; safe to leave in.
     remotePatterns: [{ protocol: 'https', hostname: 'utfs.io' }],
     unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: true, // <-- add this to let the build pass
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    outputFileTracingIncludes: {
+      // Ensure bcryptjs gets copied into .next/standalone/node_modules
+      '/**/*': ['./node_modules/bcryptjs/**'],
+    },
   },
 };
 module.exports = nextConfig;
