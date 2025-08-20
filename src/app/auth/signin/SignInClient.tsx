@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import styles from "./SignIn.module.scss";
 
 const ADMIN_DEFAULT = "https://admin.drcodezenna.com";
 
 function normalizeCallback(input: string | undefined): string {
-  const base = (typeof window !== "undefined" && window.location.origin) || ADMIN_DEFAULT;
+  const base =
+    (typeof window !== "undefined" && window.location.origin) || ADMIN_DEFAULT;
   try {
     if (!input) return "/admin";
     const u = new URL(input, base);
@@ -26,7 +27,10 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const safeCallbackUrl = useMemo(() => normalizeCallback(callbackUrl), [callbackUrl]);
+  const safeCallbackUrl = useMemo(
+    () => normalizeCallback(callbackUrl),
+    [callbackUrl]
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +55,6 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1>Admin sign in</h1>
-
         <form onSubmit={onSubmit} className={styles.form}>
           <label>
             Email
@@ -64,7 +67,7 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
             />
           </label>
 
-        <label>
+          <label>
             Password
             <input
               type="password"

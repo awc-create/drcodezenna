@@ -7,14 +7,13 @@ const nextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'utfs.io' }],
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  experimental: {
-    outputFileTracingIncludes: {
-      // Ensure bcryptjs gets copied into .next/standalone/node_modules
-      '/**/*': ['./node_modules/bcryptjs/**'],
-    },
+  eslint: { ignoreDuringBuilds: true },
+
+  // ⬇️ moved out of `experimental`
+  outputFileTracingIncludes: {
+    // ensure bcryptjs is copied into .next/standalone
+    '/**/*': ['./node_modules/bcryptjs/**'],
   },
 };
+
 module.exports = nextConfig;
