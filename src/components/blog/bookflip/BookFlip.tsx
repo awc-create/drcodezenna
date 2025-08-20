@@ -1,13 +1,15 @@
 'use client';
 
 /**
- * Fast BookFlip:
+ * Fast BookFlip (mobile-tuned):
  * - dynamic() import for react-pageflip (no SSR, smaller initial JS)
- * - mount-on-visible using IntersectionObserver
+ * - mount-on-visible (IntersectionObserver)
  * - skeleton placeholder while loading
  * - windowed page content (current ± 1)
  * - eager images on first spread, lazy after
  * - static corner peel + "Drag to flip" label (gated until book ready)
+ * - mobile tweaks: stretch sizing, lower swipeDistance, edge hotzones, flick fallback
+ * - 5% smaller on phone (scale wrapper)
  */
 
 import * as React from 'react';
@@ -22,7 +24,8 @@ const ArticleLightbox = dynamic(() => import('@/components/blog/article/ArticleL
 });
 
 // Load react-pageflip only on the client, when needed
-const FlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
+// Name it FlipBookDyn to avoid clashing with our component name.
+const FlipBookDyn = dynamic(() => import('react-pageflip'), { ssr: false });
 
 export interface BookFlipHandle {
   flipToPage: (index: number) => void;
@@ -47,8 +50,6 @@ interface FlipBookRef {
   };
 }
 
-type FlipProps = Omit<React.ComponentProps<typeof FlipBook>, 'children' | 'ref'>;
-
 const AUTO_INTERVAL_MS = 6000;
 const MANUAL_PAUSE_MS = 5000;
 const JUST_FLIPPED_WINDOW = 250;
@@ -70,11 +71,15 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
     // Static peel shown until first interaction/flip
     const [peelActive, setPeelActive] = React.useState(true);
 
-    // ✅ Selected article state (was missing before)
+    // Selected article (if no onReadMore prop supplied)
     const [selectedArticle, setSelectedArticle] = React.useState<BlogPost | null>(null);
 
     // Track current page for windowed rendering
     const [currentIndex, setCurrentIndex] = React.useState(0);
+
+    // Flick detection
+    const touchStartX = React.useRef<number | null>(null);
+    const touchStartT = React.useRef<number | null>(null);
 
     // Lazy-mount when scrolled into view
     React.useEffect(() => {
@@ -190,33 +195,72 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
       return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, []);
 
-    // Fixed sizes minimize re-measure work inside react-pageflip
-    const flipProps: FlipProps = {
-      width: isMobile ? 360 : 500,
-      height: 500,
-      minWidth: 320,
+    // Flick helpers
+    const onTouchStart = (e: React.TouchEvent) => {
+      if (!isMobile) return;
+      const t = e.changedTouches[0];
+      touchStartX.current = t.clientX;
+      touchStartT.current = performance.now();
+    };
+
+    const onTouchEnd = (e: React.TouchEvent) => {
+      if (!isMobile) return;
+      const t = e.changedTouches[0];
+      const sx = touchStartX.current;
+      const st = touchStartT.current;
+      touchStartX.current = null;
+      touchStartT.current = null;
+      if (sx == null || st == null) return;
+
+      const dx = t.clientX - sx;
+      const dt = Math.max(1, performance.now() - st);
+      const v = dx / dt; // px per ms
+
+      // thresholds tuned for phone flicks
+      const QUICK = Math.abs(v) > 0.6;     // fast flick
+      const SHORT = Math.abs(dx) > 30;     // or short but deliberate
+
+      if (QUICK || SHORT) {
+        clearAuto();
+        if (dx < 0) flipRef.current?.pageFlip?.().flipNext?.();
+        else        flipRef.current?.pageFlip?.().flipPrev?.();
+        scheduleAuto(MANUAL_PAUSE_MS);
+      }
+    };
+
+    // Fixed sizes minimize re-measure work inside react-pageflip; on mobile we let it stretch
+    const flipProps = {
+      // Responsive: stretch to container width on mobile
+      size: isMobile ? 'stretch' : 'fixed',
+      width: isMobile ? 380 : 500,   // reference aspect in stretch mode
+      height: isMobile ? 520 : 500,
+
+      minWidth: 300,
       maxWidth: 1000,
-      minHeight: 400,
+      minHeight: 420,
       maxHeight: 1536,
+
       usePortrait: isMobile,
       showCover: false,
-      size: 'fixed',
+      autoSize: true,               // re-measure on viewport changes
       drawShadow: false,
-      flippingTime: 850,
-      showPageCorners: false,
-      disableFlipByClick: false,
+      maxShadowOpacity: 0,
+
+      // Easier gestures:
+      swipeDistance: isMobile ? 2 : 6,   // ↓ easier to “commit” flip on phone
+      showPageCorners: !!isMobile,       // bigger hit area on mobile
       clickEventForward: true,
       useMouseEvents: true,
-      mobileScrollSupport: false,
-      swipeDistance: 6,
+      disableFlipByClick: true,          // we provide edge hotzones
+
+      flippingTime: 800,
+      mobileScrollSupport: true,
       onFlip: handleOnFlip,
       className: styles.book,
       style: { margin: '0 auto' },
       startPage: 0,
       startZIndex: 0,
-      autoSize: false, // <-- avoid extra measuring
-      maxShadowOpacity: 0,
-    };
+    } as const;
 
     // Window the page content (current ± NEAR_WINDOW)
     const isNear = (i: number) => Math.abs(i - currentIndex) <= NEAR_WINDOW;
@@ -249,8 +293,8 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
 
           <h2 className={styles.title}>{page.title}</h2>
           <hr className={styles.divider} />
-          <p className={styles.author}>By {page.author}</p>
-          <p className={styles.summary}>{page.summary}</p>
+          {page.author && <p className={styles.author}>By {page.author}</p>}
+          {page.summary && <p className={styles.summary}>{page.summary}</p>}
 
           <button
             type="button"
@@ -274,32 +318,66 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
         className={styles.bookContainer}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
+        {/* scale wrapper: makes the whole book 5% smaller on phones (and hotzones with it) */}
         <div
-          className={styles.bookWrap}
-          data-ready={bookReady ? '1' : '0'}
-          data-spread={isMobile ? '0' : '1'}
+          className={styles.scaleWrap}
+          data-mobile={isMobile ? '1' : '0'}
         >
-          {/* Skeleton until it scrolls into view */}
-          {!inView && <div className={styles.bookSkeleton} aria-hidden="true" />}
-
-          {inView && (
-            <FlipBook {...flipProps} ref={flipRef as any}>
-              {pages.map(renderPage)}
-            </FlipBook>
-          )}
-
-          {/* Label (only after book is ready) */}
-          <div className={styles.edgeHints} aria-hidden="true">
-            <div className={styles.edgeLabel}>Drag to flip</div>
-          </div>
-
-          {/* Static corner peel (hidden after first interaction/flip) */}
           <div
-            className={styles.cornerPeel}
-            data-active={peelActive ? '1' : '0'}
-            aria-hidden="true"
-          />
+            className={styles.bookWrap}
+            data-ready={bookReady ? '1' : '0'}
+            data-spread={isMobile ? '0' : '1'}
+          >
+            {/* Skeleton until it scrolls into view */}
+            {!inView && <div className={styles.bookSkeleton} aria-hidden="true" />}
+
+            {inView && (
+              <FlipBookDyn {...(flipProps as any)} ref={flipRef as any}>
+                {pages.map(renderPage)}
+              </FlipBookDyn>
+            )}
+
+            {/* Edge hotzones (tap to flip) */}
+            {inView && (
+              <>
+                <div
+                  className={styles.hotzoneLeft}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearAuto();
+                    flipRef.current?.pageFlip?.().flipPrev?.();
+                    scheduleAuto(MANUAL_PAUSE_MS);
+                  }}
+                  aria-hidden="true"
+                />
+                <div
+                  className={styles.hotzoneRight}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearAuto();
+                    flipRef.current?.pageFlip?.().flipNext?.();
+                    scheduleAuto(MANUAL_PAUSE_MS);
+                  }}
+                  aria-hidden="true"
+                />
+              </>
+            )}
+
+            {/* Label (only after book is ready) */}
+            <div className={styles.edgeHints} aria-hidden="true">
+              <div className={styles.edgeLabel}>Drag to flip</div>
+            </div>
+
+            {/* Static corner peel (hidden after first interaction/flip) */}
+            <div
+              className={styles.cornerPeel}
+              data-active={peelActive ? '1' : '0'}
+              aria-hidden="true"
+            />
+          </div>
         </div>
 
         {shouldShowLightbox && selectedArticle && (
