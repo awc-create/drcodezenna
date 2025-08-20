@@ -336,7 +336,7 @@ const BookFlip = React.forwardRef<BookFlipHandle, BookFlipProps>(
         onTouchEnd={onTouchEnd}
       >
         {/* scale wrapper: makes the whole book 5% smaller on phones (and hotzones with it) */}
-        <div className={styles.scaleWrap} data-mobile={isMobile ? '1' : '0'}>
+        <div data-mobile={isMobile ? '1' : '0'}>
           <div
             className={styles.bookWrap}
             data-ready={bookReady ? '1' : '0'}

@@ -10,16 +10,6 @@
   overscroll-behavior: contain;
 }
 
-/* Scale wrapper (entire book incl. hotzones) */
-.scaleWrap {
-  --mobile-scale: 0.95; /* 5% smaller on phone */
-  transform-origin: top center;
-
-  &[data-mobile="1"] {
-    transform: scale(var(--mobile-scale));
-  }
-}
-
 /* Overlay anchor */
 .bookWrap {
   position: relative;
