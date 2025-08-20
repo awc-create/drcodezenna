@@ -1,23 +1,18 @@
 import SignInClient from "./SignInClient";
 
-// Optional, keeps this route fully dynamic (no static optimization)
 export const dynamic = "force-dynamic";
 
-type SearchParams = { [key: string]: string | string[] | undefined };
+type SP = Record<string, string | string[] | undefined>;
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SP>;
 }) {
-  const callbackUrlParam = searchParams?.callbackUrl;
-  // callbackUrl can be string | string[] | undefined
+  const sp = await searchParams;
+  const raw = sp?.callbackUrl;
   const callbackUrl =
-    typeof callbackUrlParam === "string"
-      ? callbackUrlParam
-      : Array.isArray(callbackUrlParam) && callbackUrlParam.length > 0
-      ? callbackUrlParam[0]
-      : "/admin";
+    typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "/admin";
 
   return <SignInClient callbackUrl={callbackUrl} />;
 }
