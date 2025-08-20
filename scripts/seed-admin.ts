@@ -1,26 +1,30 @@
-require("dotenv/config");
-const { PrismaClient } = require("@prisma/client");
-const bcrypt = require("bcryptjs");
+import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = (process.env.SEED_ADMIN_EMAIL || "adrcodezenna@gmail.com").toLowerCase().trim();
+  const email = (process.env.SEED_ADMIN_EMAIL || "drcodezenna@gmail.com").toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD || "AeX4782straw!";
-  if (!email || !password) {
-    console.error("Missing SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD"); process.exit(1);
-  }
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await hash(password, 12);
 
   await prisma.user.upsert({
     where: { email },
-    update: { role: "admin", passwordHash, name: "Admin" },
+    update: { role: "admin", passwordHash },
     create: { email, role: "admin", passwordHash, name: "Admin" },
   });
 
-  console.log("✅ Admin ready:", email);
+  console.log("Admin ready:", email);
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+  // scripts/seed-admin.cjs

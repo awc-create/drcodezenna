@@ -1,14 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { signIn } from "next-auth/react";
 import styles from "./SignIn.module.scss";
+
+const ADMIN_DEFAULT = "https://admin.drcodezenna.com";
+
+function normalizeCallback(input: string | undefined): string {
+  const base = (typeof window !== "undefined" && window.location.origin) || ADMIN_DEFAULT;
+  try {
+    if (!input) return "/admin";
+    const u = new URL(input, base);
+    const admin = new URL(base);
+    u.protocol = "https:";
+    u.host = admin.host;
+    return u.toString();
+  } catch {
+    return "/admin";
+  }
+}
 
 export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const safeCallbackUrl = useMemo(() => normalizeCallback(callbackUrl), [callbackUrl]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,13 +37,14 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
       redirect: false,
       email,
       password,
-      callbackUrl,
+      callbackUrl: safeCallbackUrl,
     });
 
     setSubmitting(false);
 
     if (res?.error) setErr("Invalid email or password");
-    else if (res?.ok) window.location.href = callbackUrl;
+    else if (res?.ok) window.location.href = safeCallbackUrl;
+    else setErr("Sign in failed. Please try again.");
   }
 
   return (
@@ -45,7 +64,7 @@ export default function SignInClient({ callbackUrl }: { callbackUrl: string }) {
             />
           </label>
 
-          <label>
+        <label>
             Password
             <input
               type="password"

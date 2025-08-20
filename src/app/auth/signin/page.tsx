@@ -2,11 +2,11 @@ import SignInClient from "./SignInClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page({
+export default function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: { callbackUrl?: string };
 }) {
-  const { callbackUrl } = await searchParams;
-  return <SignInClient callbackUrl={callbackUrl ?? "/admin"} />;
+  const callbackUrl = searchParams?.callbackUrl ?? "/admin";
+  return <SignInClient callbackUrl={callbackUrl} />;
 }
