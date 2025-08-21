@@ -67,18 +67,32 @@ export default function Navbar() {
 
       {!isAdmin && (
         <div className={styles.navLinks}>
-          {NAV_LINKS.map(({ slug, label }) => {
-            const href = `/${slug}`;
+        {NAV_LINKS.map((link) => {
+          if ("external" in link && link.external) {
             return (
-              <Link
-                key={slug}
-                href={href}
-                className={isLinkActive(href) ? styles.active : ""}
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.cvLink}
               >
-                {label}
-              </Link>
+                {link.label}
+              </a>
             );
-          })}
+          }
+
+          const href = `/${link.slug}`;
+          return (
+            <Link
+              key={link.slug}
+              href={href}
+              className={isLinkActive(href) ? styles.active : ""}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
         </div>
       )}
 
