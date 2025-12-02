@@ -1,3 +1,4 @@
+// src/app/api/send-email/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWeeklyDigestEmail } from '@/lib/email/sendWeeklyDigestEmail';

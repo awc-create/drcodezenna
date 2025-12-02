@@ -48,3 +48,22 @@
 .right {
   max-width: 50%;
 }
+
+/* Add inside Contact.module.scss */
+
+.success {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #15803d; // green
+}
+
+.error {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #b91c1c; // red
+}
+
+button[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}

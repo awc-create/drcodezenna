@@ -1,3 +1,4 @@
+// src/lib/email/sendWelcomeEmail.tsx
 import * as React from 'react';
 import { render } from '@react-email/render';
 import { resend, RESEND_FROM } from '@/lib/resend';
